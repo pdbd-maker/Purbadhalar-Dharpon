@@ -1,0 +1,258 @@
+import React, { forwardRef } from 'react';
+import { PhotoCardData } from '../types';
+import { THEMES } from '../data/themesAndPresets';
+
+interface PhotoCardPreviewProps {
+  data: PhotoCardData;
+}
+
+export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps>(
+  ({ data }, ref) => {
+    const theme = THEMES[data.themeId] || THEMES.royal_blue;
+    const isPortrait = data.aspectRatio === '4:5';
+
+    // Preview Dimensions (scaled smoothly on screen, 540px wide for 1:1, 540x675 for 4:5)
+    const cardWidth = 540;
+    const cardHeight = isPortrait ? 675 : 540;
+
+    return (
+      <div className="flex flex-col items-center">
+        {/* Container Frame */}
+        <div
+          ref={ref}
+          id="photocard"
+          style={{
+            width: `${cardWidth}px`,
+            height: `${cardHeight}px`,
+            fontFamily: `'${data.fontFamily}', 'SolaimanLipi', 'Hind Siliguri', sans-serif`,
+            backgroundColor: '#020617',
+            border: '1px solid #1e293b',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+          }}
+          className="relative overflow-hidden rounded-sm transition-all select-none"
+        >
+          {/* Main Background Image & Transform */}
+          <div
+            className="absolute inset-0 w-full h-full flex items-center justify-center z-0 overflow-hidden"
+            style={{ backgroundColor: '#0f172a' }}
+          >
+            {data.mainImgUrl ? (
+              <img
+                id="fg-main"
+                src={data.mainImgUrl}
+                alt="Main News"
+                crossOrigin="anonymous"
+                className="w-full h-full object-cover relative transition-transform duration-75 ease-out"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="540" cy="540" r="300" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="32" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি নির্বাচন করুন</text></svg>';
+                }}
+                style={{
+                  transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
+                  filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+                  transformOrigin: 'center center',
+                }}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2" style={{ color: '#64748b' }}>
+                <span className="text-sm">খবরের ছবি আপলোড করুন</span>
+              </div>
+            )}
+          </div>
+
+          {/* Fixed Top Header Bar */}
+          <div
+            className="absolute top-0 left-0 w-full z-10 transition-colors duration-300"
+            style={{
+              height: '85px',
+              background: theme.topBarGradient,
+              borderBottom: `3.5px solid ${theme.topBarBorder}`,
+            }}
+          />
+
+          {/* Bottom Dark Gradient Mask for Text Readability */}
+          <div
+            className="absolute bottom-[45px] left-0 w-full z-10 pointer-events-none transition-all duration-300"
+            style={{
+              height: isPortrait ? '260px' : '200px',
+              background: `linear-gradient(0deg, rgba(0,0,0,${data.overlayOpacity}) 0%, rgba(0,0,0,${
+                data.overlayOpacity * 0.7
+              }) 60%, transparent 100%)`,
+            }}
+          />
+
+          {/* Newsprint Subtle Texture Dot Overlay */}
+          <div
+            className="absolute bottom-0 left-0 w-full z-[11] opacity-[0.03] pointer-events-none"
+            style={{
+              height: '40%',
+              backgroundImage: 'radial-gradient(circle, #fff 10%, transparent 11%)',
+              backgroundSize: '5px 5px',
+            }}
+          />
+
+          {/* Top Header Content Box */}
+          <div className="absolute top-[15px] left-[22px] right-[22px] flex items-center justify-between z-20">
+            {/* Logo Section */}
+            <div className="flex items-center gap-3">
+              {data.logoUrl ? (
+                <div className="max-w-[160px] max-h-[50px] flex items-center">
+                  <img
+                    id="card-logo"
+                    src={data.logoUrl}
+                    alt="Logo"
+                    crossOrigin="anonymous"
+                    className="max-w-full max-h-[50px] object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  <span
+                    className="font-extrabold text-2xl tracking-tight"
+                    style={{
+                      color: '#ffffff',
+                      textShadow: '0px 2px 4px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    পূর্বধলার দর্পণ
+                  </span>
+                  <span
+                    className="text-[10px] font-semibold tracking-wider -mt-1"
+                    style={{ color: '#fbbf24', opacity: 0.95 }}
+                  >
+                    pdonline.com.bd
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Date Box */}
+            <div className="text-right leading-tight" style={{ color: '#ffffff' }}>
+              <div
+                className="font-bold text-sm tracking-wide"
+                style={{ color: theme.accentColor }}
+              >
+                {data.customDay}
+              </div>
+              <div className="text-xs font-semibold my-0.5" style={{ opacity: 0.95 }}>
+                {data.customEngDate}
+              </div>
+              <div className="text-[11px]" style={{ opacity: 0.8 }}>
+                {data.customBngDate}
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area (Headline + Detail Tag) */}
+          <div
+            className="absolute left-[22px] right-[22px] z-20 text-left transition-all duration-200 flex flex-col items-start gap-2.5"
+            style={{
+              bottom: '58px',
+            }}
+          >
+            {/* Title Wrapper with Left Border Accent */}
+            <div
+              className="pl-3 w-full"
+              style={{
+                borderLeft: `4px solid ${theme.titleBorderColor}`,
+              }}
+            >
+              <div
+                id="out-title"
+                style={{
+                  fontSize: `${data.fontSize}px`,
+                  lineHeight: data.lineHeight,
+                  textAlign: data.textAlign,
+                  color: '#ffffff',
+                  textShadow:
+                    '0px 2px 4px rgba(0,0,0,1), 0px 4px 10px rgba(0,0,0,0.95)',
+                }}
+                className="font-bold tracking-normal break-words"
+              >
+                {data.headline || 'এখানে আপনার নিউজ পোর্টালের প্রধান শিরোনামটি লিখুন...'}
+              </div>
+            </div>
+
+            {/* Detail Button Tag */}
+            {data.showDetailTag && data.detailTag && (
+              <div
+                id="out-tag"
+                className="inline-flex items-center justify-center px-4 rounded font-bold text-xs shadow-lg"
+                style={{
+                  background: theme.detailTagBg,
+                  color: theme.detailTagText,
+                  height: '30px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: '1.2',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <span className="inline-flex items-center justify-center leading-none">
+                  {data.detailTag}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Social Bar */}
+          <div
+            id="card-footer-bar"
+            className="absolute bottom-0 left-0 w-full h-[45px] z-30 flex items-center justify-around px-4 transition-colors duration-300"
+            style={{
+              backgroundColor: theme.footerBg,
+              color: theme.footerTextColor,
+              borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+              height: '45px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              className="footer-social-item flex items-center gap-1.5 text-xs font-extrabold"
+              style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <i className="fab fa-facebook text-sm flex items-center justify-center"></i>
+              <span className="inline-flex items-center leading-none">
+                {data.fbHandle || '@purbadhala'}
+              </span>
+            </div>
+            <div
+              className="footer-social-item flex items-center gap-1.5 text-xs font-extrabold"
+              style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <i className="fab fa-youtube text-sm flex items-center justify-center"></i>
+              <span className="inline-flex items-center leading-none">
+                {data.ytHandle || '@purbadhala'}
+              </span>
+            </div>
+            <div
+              className="footer-social-item flex items-center gap-1.5 text-xs font-extrabold"
+              style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <i className="fas fa-globe text-sm flex items-center justify-center"></i>
+              <span className="inline-flex items-center leading-none">
+                {data.websiteUrl || 'www.pdonline.com.bd'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between w-[540px] text-xs text-slate-400 px-1">
+          <span>
+            ক্যানভাস সাইজ:{' '}
+            <strong className="text-sky-400">
+              {isPortrait ? '১০৮০ × ১৩৫০ (৪:৫)' : '১০৮০ × ১০৮০ (১:১)'}
+            </strong>
+          </span>
+          <span className="text-slate-400">পূর্বধলার দর্পণ অফিসিয়াল ফটোকার্ড টেমপ্লেট</span>
+        </div>
+      </div>
+    );
+  }
+);
+
+PhotoCardPreview.displayName = 'PhotoCardPreview';

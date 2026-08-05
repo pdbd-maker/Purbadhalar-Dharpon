@@ -1,0 +1,6 @@
+{
+  "name": "Purbadhalar Dhorpon PhotoCard Generator",
+  "description": "পূর্বধলার দর্পণ - পেশাদার ও প্রিমিয়াম ফটোকার্ড জেনারেটর (Offline Standalone & High-Res PNG Exporter)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
