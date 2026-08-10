@@ -49,6 +49,7 @@ export interface PhotoCardData {
   ytHandle: string;
   websiteUrl: string;
   aspectRatio: AspectRatio;
+  imgFit?: 'contain' | 'cover' | 'fill';
   themeId: ThemeId;
   overlayOpacity: number;
   filterBrightness: number;
@@ -83,6 +84,7 @@ export interface YouTubeThumbnailData {
   ytHandle: string;
   targetPlatform?: 'youtube' | 'facebook' | 'tiktok' | 'all';
   aspectRatio?: '16:9' | '9:16';
+  imgFit?: 'contain' | 'cover' | 'fill';
   layoutStyle: 'bottom_pill' | 'split_badge' | 'left_bar' | 'center_hero' | 'top_banner';
   filterBrightness: number;
   filterContrast: number;

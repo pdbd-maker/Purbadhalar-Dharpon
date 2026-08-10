@@ -37,22 +37,40 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
             style={{ backgroundColor: '#0f172a' }}
           >
             {data.mainImgUrl ? (
-              <img
-                id="fg-main"
-                src={data.mainImgUrl}
-                alt="Main News"
-                crossOrigin="anonymous"
-                className="w-full h-full object-cover relative transition-transform duration-75 ease-out"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="540" cy="540" r="300" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="32" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি নির্বাচন করুন</text></svg>';
-                }}
-                style={{
-                  transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
-                  filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
-                  transformOrigin: 'center center',
-                }}
-              />
+              <>
+                {(data.imgFit || 'contain') === 'contain' && (
+                  <img
+                    src={data.mainImgUrl}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover blur-xl opacity-45 scale-110 pointer-events-none"
+                    style={{
+                      filter: `brightness(${data.filterBrightness * 0.9}%) contrast(${data.filterContrast}%) blur(16px)`,
+                    }}
+                  />
+                )}
+                <img
+                  id="fg-main"
+                  src={data.mainImgUrl}
+                  alt="Main News"
+                  crossOrigin="anonymous"
+                  className={`w-full h-full relative transition-transform duration-75 ease-out ${
+                    (data.imgFit || 'contain') === 'contain'
+                      ? 'object-contain'
+                      : (data.imgFit || 'contain') === 'fill'
+                      ? 'object-fill'
+                      : 'object-cover'
+                  }`}
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="540" cy="540" r="300" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="32" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি নির্বাচন করুন</text></svg>';
+                  }}
+                  style={{
+                    transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
+                    filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+                    transformOrigin: 'center center',
+                  }}
+                />
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center gap-2" style={{ color: '#64748b' }}>
                 <span className="text-sm">খবরের ছবি আপলোড করুন</span>

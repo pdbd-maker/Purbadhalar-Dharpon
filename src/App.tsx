@@ -59,6 +59,7 @@ export default function App() {
       ytHandle: '@purbadhala',
       websiteUrl: 'www.pdonline.com.bd',
       aspectRatio: '1:1',
+      imgFit: 'contain',
       themeId: 'royal_blue',
       overlayOpacity: 0.85,
       filterBrightness: 100,

@@ -85,22 +85,41 @@ export const YouTubeThumbnailPreview = forwardRef<
 
     // Single Image Mode
     if (images.length === 1) {
+      const fit = data.imgFit || 'cover';
       return (
-        <img
-          id="fg-main"
-          src={images[0]}
-          alt="Thumbnail BG"
-          crossOrigin="anonymous"
-          className="w-full h-full object-cover relative transition-transform duration-75 ease-out"
-          onError={(e) => {
-            e.currentTarget.src =
-              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="640" cy="360" r="250" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="28" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি যুক্ত করুন</text></svg>';
-          }}
-          style={{
-            transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
-            filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
-          }}
-        />
+        <>
+          {fit === 'contain' && (
+            <img
+              src={images[0]}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+              style={{
+                filter: `brightness(${data.filterBrightness * 0.9}%) contrast(${data.filterContrast}%) blur(16px)`,
+              }}
+            />
+          )}
+          <img
+            id="fg-main"
+            src={images[0]}
+            alt="Thumbnail BG"
+            crossOrigin="anonymous"
+            className={`w-full h-full relative transition-transform duration-75 ease-out ${
+              fit === 'contain'
+                ? 'object-contain'
+                : fit === 'fill'
+                ? 'object-fill'
+                : 'object-cover'
+            }`}
+            onError={(e) => {
+              e.currentTarget.src =
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="640" cy="360" r="250" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="28" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি যুক্ত করুন</text></svg>';
+            }}
+            style={{
+              transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
+              filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+            }}
+          />
+        </>
       );
     }
 

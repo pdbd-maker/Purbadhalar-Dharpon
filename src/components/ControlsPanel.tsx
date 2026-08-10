@@ -53,6 +53,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         const result = event.target?.result as string;
         onChange({
           mainImgUrl: result,
+          imgFit: 'contain',
           zoom: 1,
           posY: 0,
           posX: 0,
@@ -255,6 +256,57 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 className="hidden"
               />
             </label>
+          </div>
+
+          {/* Image Fit Mode Option */}
+          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <label className="text-xs font-bold text-amber-400 flex items-center justify-between">
+              <span>২. ছবি ডিসপ্লে মোড (অটো ক্রপ কাট রোধ):</span>
+              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                {data.imgFit === 'cover' ? 'ক্যানভাস ক্রপ' : data.imgFit === 'fill' ? 'টেনে ফিট' : 'পুরো ছবি (নো-ক্রপ)'}
+              </span>
+            </label>
+
+            <div className="grid grid-cols-3 gap-1.5 text-xs font-bold mt-0.5">
+              <button
+                type="button"
+                onClick={() => onChange({ imgFit: 'contain' })}
+                className={`py-2 px-1.5 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                  !data.imgFit || data.imgFit === 'contain'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>🖼️ পুরো ছবি</span>
+                <span className="text-[9px] opacity-80 font-normal">(অটো ক্রপ ছাড়া)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onChange({ imgFit: 'cover' })}
+                className={`py-2 px-1.5 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                  data.imgFit === 'cover'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>✂️ ক্যানভাস জুম</span>
+                <span className="text-[9px] opacity-80 font-normal">(ফুল ক্যানভাস)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onChange({ imgFit: 'fill' })}
+                className={`py-2 px-1.5 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                  data.imgFit === 'fill'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>📐 টেনে ফিট</span>
+                <span className="text-[9px] opacity-80 font-normal">(Fill Stretch)</span>
+              </button>
+            </div>
           </div>
 
           {/* Zoom Slider */}

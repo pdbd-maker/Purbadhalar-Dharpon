@@ -271,11 +271,22 @@ export function generateOfflineHtml(
             justify-content: center; 
             z-index: 2; 
             overflow: hidden; 
+            background-color: #0f172a;
+        }
+        .card-blur-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: blur(16px) brightness(0.9);
+            opacity: 0.45;
+            transform: scale(1.1);
+            pointer-events: none;
         }
         .main-img { 
             width: 100%; 
             height: 100%; 
-            object-fit: cover; 
+            object-fit: contain; 
             position: relative; 
             transform-origin: center center; 
             transition: transform 0.05s linear;
@@ -566,9 +577,19 @@ export function generateOfflineHtml(
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>৩. মূল খবরের ছবি আপলোড:</label>
-                <input type="file" id="input-card-img" accept="image/*">
+            <div class="row-grid">
+                <div class="input-group">
+                    <label>৩. মূল খবরের ছবি আপলোড:</label>
+                    <input type="file" id="input-card-img" accept="image/*">
+                </div>
+                <div class="input-group">
+                    <label>ছবি ডিসপ্লে মোড (ক্রপ রোধ):</label>
+                    <select id="card-img-fit">
+                        <option value="contain" selected>🖼️ পুরো ছবি (অটো ক্রপ ছাড়া)</option>
+                        <option value="cover">✂️ ক্যানভাস জুম (Cover)</option>
+                        <option value="fill">📐 টেনে ফিট (Fill)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="row-grid">
@@ -652,6 +673,7 @@ export function generateOfflineHtml(
         <div class="preview-container">
             <div id="photocard">
                 <div class="main-img-container">
+                    <img id="card-blur-bg" class="card-blur-bg" src="${initialCardImg}">
                     <img id="card-fg-img" class="main-img" src="${initialCardImg}">
                 </div>
                 
@@ -878,6 +900,7 @@ export function generateOfflineHtml(
             bindEvent('cardPosY', 'input', updateCardImgTransform);
             bindEvent('cardPosX', 'input', updateCardImgTransform);
             bindEvent('cardRot', 'input', updateCardImgTransform);
+            bindEvent('card-img-fit', 'change', updateCardImgTransform);
 
             bindEvent('card-title-input', 'input', syncCard);
             bindEvent('card-category-select', 'change', syncCard);
@@ -1035,15 +1058,24 @@ export function generateOfflineHtml(
             var posYEl = document.getElementById('cardPosY');
             var posXEl = document.getElementById('cardPosX');
             var rotEl = document.getElementById('cardRot');
+            var fitEl = document.getElementById('card-img-fit');
 
             var zoomVal = zoomEl ? zoomEl.value : 1;
             var posYVal = posYEl ? posYEl.value : 0;
             var posXVal = posXEl ? posXEl.value : 0;
             var rotVal = rotEl ? rotEl.value : 0;
+            var fitVal = fitEl ? fitEl.value : 'contain';
 
             var img = document.getElementById('card-fg-img');
+            var blurBg = document.getElementById('card-blur-bg');
+
             if (img) {
                 img.style.transform = 'translate(' + posXVal + 'px, ' + posYVal + 'px) scale(' + zoomVal + ') rotate(' + rotVal + 'deg)';
+                img.style.objectFit = fitVal;
+            }
+
+            if (blurBg) {
+                blurBg.style.display = (fitVal === 'contain') ? 'block' : 'none';
             }
 
             var zoomDisp = document.getElementById('cardZoomDisplay');
@@ -1064,6 +1096,7 @@ export function generateOfflineHtml(
             var py = document.getElementById('cardPosY'); if (py) py.value = 0;
             var px = document.getElementById('cardPosX'); if (px) px.value = 0;
             var r = document.getElementById('cardRot'); if (r) r.value = 0;
+            var fit = document.getElementById('card-img-fit'); if (fit) fit.value = 'contain';
             updateCardImgTransform();
         }
 
@@ -1172,7 +1205,9 @@ export function generateOfflineHtml(
             var reader = new FileReader();
             reader.onload = function() {
                 var img = document.getElementById('card-fg-img');
+                var blurBg = document.getElementById('card-blur-bg');
                 if (img) img.src = reader.result; 
+                if (blurBg) blurBg.src = reader.result;
                 resetCardTransforms();
             };
             reader.readAsDataURL(e.target.files[0]);
