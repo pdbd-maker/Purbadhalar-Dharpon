@@ -642,6 +642,17 @@ export function generateOfflineHtml(
 
             <div class="row-grid">
                 <div class="input-group">
+                    <label>তারিখ নির্বাচন:</label>
+                    <input type="date" id="card-date-input" style="color-scheme: dark; cursor:pointer;">
+                </div>
+                <div class="input-group">
+                    <label>সময় নির্বাচন:</label>
+                    <input type="time" id="card-time-input" style="color-scheme: dark; cursor:pointer;">
+                </div>
+            </div>
+
+            <div class="row-grid">
+                <div class="input-group">
                     <label>ফন্ট সাইজ:</label>
                     <input type="range" min="18" max="42" value="${cardData.fontSize || 26}" class="slider" id="cardFontSize">
                     <span id="cardFontDisplay" style="font-size:11px; color:#38bdf8; display:block; margin-top:2px;">${cardData.fontSize || 26}px</span>
@@ -689,9 +700,10 @@ export function generateOfflineHtml(
                     </div>
                     <div class="category-badge" id="out-category">${cardData.category || 'পূর্বধলা'}</div>
                     <div class="date-box">
-                        <div class="day-name" id="out-day">রবিবার</div>
-                        <div id="out-eng" class="eng-date">০২ আগস্ট ২০২৬</div>
-                        <div id="out-bng" class="bng-date">১৮ শ্রাবণ ১৪৩৩</div>
+                        <div class="day-name" id="out-day">মঙ্গলবার</div>
+                        <div id="out-eng" class="eng-date">০১ সেপ্টেম্বর ২০২৬</div>
+                        <div id="out-bng" class="bng-date">১৭ ভাদ্র ১৪৩৩ বঙ্গাব্দ</div>
+                        <div id="out-time" style="font-size:10px; color:#fde047; font-weight:bold; margin-top:2px; display:inline-block; background:rgba(0,0,0,0.4); padding:1px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.15);">🕒 সন্ধ্যা ০৭:২৭</div>
                     </div>
                 </div>
 
@@ -903,10 +915,12 @@ export function generateOfflineHtml(
             bindEvent('card-img-fit', 'change', updateCardImgTransform);
 
             bindEvent('card-title-input', 'input', syncCard);
+            bindEvent('card-date-input', 'change', syncCard);
+            bindEvent('card-time-input', 'change', syncCard);
             bindEvent('card-category-select', 'change', syncCard);
             bindEvent('card-badge-color', 'input', syncCard);
             bindEvent('card-badge-color', 'change', syncCard);
-            bindEvent('card-fontSize', 'input', syncCard);
+            bindEvent('cardFontSize', 'input', syncCard);
             bindEvent('card-reporter-input', 'input', syncCard);
             bindEvent('card-tag-input', 'change', syncCard);
             bindEvent('card-web-input', 'input', syncCard);
@@ -973,36 +987,114 @@ export function generateOfflineHtml(
             if (yBtn) yBtn.className = 'tab-btn ' + (mode === 'youtube' ? 'active' : '');
         }
 
-        /* Date Updater */
-        function updateDate() {
-            var today = new Date();
+        /* Bengali Calendar Converter (Bangla Academy Revised Standard 2019) */
+        function toBngNum(n) {
+            return String(n).split('').map(function(d) {
+                return "০১২৩৪৫৬৭৮৯"[d] || d;
+            }).join('');
+        }
+
+        function isGregorianLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        }
+
+        function getBengaliEraDate(gregorianDate) {
+            var gYear = gregorianDate.getFullYear();
+            var gMonth = gregorianDate.getMonth();
+            var gDay = gregorianDate.getDate();
+
+            var bMonthNames = [
+                'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
+                'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'
+            ];
+
+            var isLeap = isGregorianLeapYear(gYear);
+            var bMonthDays = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, isLeap ? 31 : 30, 30];
+
+            var startYear = (gMonth < 3 || (gMonth === 3 && gDay < 14)) ? gYear - 1 : gYear;
+            var startLeap = isGregorianLeapYear(startYear);
+            var currentMonthDays = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, startLeap ? 31 : 30, 30];
+
+            var boishakh1 = new Date(startYear, 3, 14, 0, 0, 0);
+            var currentTarget = new Date(gYear, gMonth, gDay, 0, 0, 0);
+            var diffMs = currentTarget.getTime() - boishakh1.getTime();
+            var dayOffset = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+            var bYear = startYear - 593;
+            var bMonthIdx = 0;
+            var bDay = dayOffset + 1;
+
+            for (var i = 0; i < 12; i++) {
+                if (bDay <= currentMonthDays[i]) {
+                    bMonthIdx = i;
+                    break;
+                }
+                bDay -= currentMonthDays[i];
+            }
+
+            return toBngNum(bDay) + ' ' + bMonthNames[bMonthIdx] + ' ' + toBngNum(bYear) + ' বঙ্গাব্দ';
+        }
+
+        function getBengaliTime(d) {
+            var hours = d.getHours();
+            var minutes = d.getMinutes();
+            var period = 'রাত';
+            if (hours >= 4 && hours < 6) period = 'ভোর';
+            else if (hours >= 6 && hours < 12) period = 'সকাল';
+            else if (hours >= 12 && hours < 15) period = 'দুপুর';
+            else if (hours >= 15 && hours < 18) period = 'বিকাল';
+            else if (hours >= 18 && hours < 20) period = 'সন্ধ্যা';
+            else period = 'রাত';
+
+            var displayHours = hours % 12;
+            if (displayHours === 0) displayHours = 12;
+            var hourStr = displayHours < 10 ? '০' + displayHours : String(displayHours);
+            var minStr = minutes < 10 ? '০' + minutes : String(minutes);
+
+            return period + ' ' + toBngNum(hourStr) + ':' + toBngNum(minStr);
+        }
+
+        /* Date & Time Updater */
+        function updateDate(customDateObj) {
+            var today = customDateObj || new Date();
             var days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
             var dayEl = document.getElementById('out-day');
             if (dayEl) dayEl.innerText = days[today.getDay()];
 
-            var bngNum = function(n) {
-                return n.toString().split('').map(function(d) {
-                    return "০১২৩৪৫৬৭৮৯"[d] || d;
-                }).join('');
-            };
-
             var months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
             var engEl = document.getElementById('out-eng');
+            var dayNum = today.getDate();
+            var dayStr = dayNum < 10 ? '০' + dayNum : String(dayNum);
             if (engEl) {
-                engEl.innerText = bngNum(today.getDate()) + ' ' + months[today.getMonth()] + ' ' + bngNum(today.getFullYear());
+                engEl.innerText = toBngNum(dayStr) + ' ' + months[today.getMonth()] + ' ' + toBngNum(today.getFullYear());
             }
 
-            var bngDay = today.getDate() + 17; 
-            var bngMonth = "শ্রাবণ";
-            var bngYear = 1433;
             var bngEl = document.getElementById('out-bng');
             if (bngEl) {
-                bngEl.innerText = bngNum(bngDay) + ' ' + bngMonth + ' ' + bngNum(bngYear);
+                bngEl.innerText = getBengaliEraDate(today);
+            }
+
+            var timeEl = document.getElementById('out-time');
+            if (timeEl) {
+                timeEl.innerText = '🕒 ' + getBengaliTime(today);
             }
         }
 
         /* 📰 PhotoCard Sync */
         function syncCard() {
+            var dateInp = document.getElementById('card-date-input');
+            var timeInp = document.getElementById('card-time-input');
+
+            if (dateInp && dateInp.value) {
+                var parts = dateInp.value.split('-');
+                var curD = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
+                if (timeInp && timeInp.value) {
+                    var tParts = timeInp.value.split(':');
+                    curD.setHours(parseInt(tParts[0], 10), parseInt(tParts[1], 10), 0);
+                }
+                updateDate(curD);
+            }
+
             var titleInput = document.getElementById('card-title-input');
             var titleOut = document.getElementById('out-title');
             if (titleInput && titleOut) {

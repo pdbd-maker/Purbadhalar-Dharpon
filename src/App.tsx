@@ -13,6 +13,8 @@ import {
   getBengaliDayName,
   getFormattedEnglishDate,
   getFormattedBengaliEraDate,
+  getFormattedBengaliTime,
+  getFullBengaliDateTimeBundle,
 } from './utils/dateUtils';
 
 export default function App() {
@@ -26,6 +28,7 @@ export default function App() {
   // Initial Facebook PhotoCard State
   const [cardData, setCardData] = useState<PhotoCardData>(() => {
     const today = new Date();
+    const dtBundle = getFullBengaliDateTimeBundle(today);
     const savedLogo = localStorage.getItem('purbadhala_saved_logo') || '';
 
     return {
@@ -50,9 +53,13 @@ export default function App() {
       reporterName: 'পূর্বধলা প্রতিনিধি',
       showReporter: true,
       useCustomDate: false,
-      customDay: getBengaliDayName(today),
-      customEngDate: getFormattedEnglishDate(today),
-      customBngDate: getFormattedBengaliEraDate(today),
+      customDay: dtBundle.day,
+      customEngDate: dtBundle.engDate,
+      customBngDate: dtBundle.bngDate,
+      customTime: dtBundle.time,
+      showTime: true,
+      selectedDateIso: dtBundle.isoDate,
+      selectedTimeStr: dtBundle.timeStr,
       detailTag: 'বিস্তারিত কমেন্টে',
       showDetailTag: true,
       fbHandle: '@purbadhala',

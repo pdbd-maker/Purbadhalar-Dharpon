@@ -43,6 +43,10 @@ export interface PhotoCardData {
   customDay: string;
   customEngDate: string;
   customBngDate: string;
+  customTime?: string;
+  showTime?: boolean;
+  selectedDateIso?: string;
+  selectedTimeStr?: string;
   detailTag: string;
   showDetailTag: boolean;
   fbHandle: string;

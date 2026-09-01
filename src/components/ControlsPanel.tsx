@@ -4,18 +4,25 @@ import {
   Type,
   Palette,
   Calendar,
-  Sliders,
+  Clock,
   Sparkles,
   Upload,
   RotateCcw,
-  Sun,
-  Contrast,
-  SlidersHorizontal,
   Share2,
   CheckCircle2,
+  RefreshCw,
+  Tag,
+  User,
 } from 'lucide-react';
 import { PhotoCardData, ThemeId, FontFamily } from '../types';
 import { THEMES, SAMPLE_NEWS_PRESETS } from '../data/themesAndPresets';
+import {
+  getFullBengaliDateTimeBundle,
+  getBengaliDayName,
+  getFormattedEnglishDate,
+  getFormattedBengaliEraDate,
+  getFormattedBengaliTime,
+} from '../utils/dateUtils';
 
 interface ControlsPanelProps {
   data: PhotoCardData;
@@ -24,13 +31,81 @@ interface ControlsPanelProps {
   onResetTransforms: () => void;
 }
 
+const CATEGORY_OPTIONS = [
+  'পূর্বধলা',
+  'ব্রেকিং নিউজ',
+  'বিশেষ সংবাদ',
+  'জাতীয়',
+  'রাজনীতি',
+  'অপরাধ ও দুর্নীতি',
+  'অর্থনীতি',
+  'খেলাধুলা',
+  'আন্তর্জাতিক',
+  'সারাদেশ',
+  'বিনোদন',
+  'শিক্ষা',
+];
+
+const REPORTER_OPTIONS = [
+  'পূর্বধলা প্রতিনিধি',
+  'নিজস্ব প্রতিবেদক',
+  'ডেস্ক রিপোর্ট',
+  'বিশেষ প্রতিনিধি',
+  'নেত্রকোনা প্রতিনিধি',
+  'ক্রাইম রিপোর্টার',
+];
+
 export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   data,
   onChange,
   onApplyPreset,
   onResetTransforms,
 }) => {
-  const [activeTab, setActiveTab] = useState<'content' | 'image' | 'design' | 'footer'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'datetime' | 'image' | 'design' | 'footer'>('content');
+
+  const handleSyncLiveDateTime = () => {
+    const now = new Date();
+    const bundle = getFullBengaliDateTimeBundle(now);
+    onChange({
+      customDay: bundle.day,
+      customEngDate: bundle.engDate,
+      customBngDate: bundle.bngDate,
+      customTime: bundle.time,
+      selectedDateIso: bundle.isoDate,
+      selectedTimeStr: bundle.timeStr,
+      useCustomDate: false,
+      showTime: true,
+    });
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoVal = e.target.value;
+    if (!isoVal) return;
+    const [yearStr, monthStr, dayStr] = isoVal.split('-');
+    const d = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10), 12, 0, 0);
+    const bundle = getFullBengaliDateTimeBundle(d);
+    onChange({
+      selectedDateIso: isoVal,
+      customDay: bundle.day,
+      customEngDate: bundle.engDate,
+      customBngDate: bundle.bngDate,
+      useCustomDate: true,
+    });
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const timeVal = e.target.value;
+    if (!timeVal) return;
+    const [hhStr, mmStr] = timeVal.split(':');
+    const tempD = new Date();
+    tempD.setHours(parseInt(hhStr, 10), parseInt(mmStr, 10), 0);
+    const formattedTime = getFormattedBengaliTime(tempD);
+    onChange({
+      selectedTimeStr: timeVal,
+      customTime: formattedTime,
+      showTime: true,
+    });
+  };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,11 +141,11 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
   return (
     <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-2xl w-full max-w-md flex flex-col gap-4 text-slate-100">
-      {/* Tab Navigation */}
-      <div className="grid grid-cols-4 gap-1 bg-[#020617] p-1 rounded-xl border border-slate-800 text-xs font-semibold shadow-inner">
+      {/* Tab Navigation (5 Tabs) */}
+      <div className="grid grid-cols-5 gap-1 bg-[#020617] p-1 rounded-xl border border-slate-800 text-[11px] font-semibold shadow-inner">
         <button
           onClick={() => setActiveTab('content')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 rounded-lg transition-all ${
             activeTab === 'content'
               ? 'bg-amber-500 text-slate-950 font-bold shadow'
               : 'text-slate-400 hover:text-white'
@@ -81,39 +156,51 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveTab('datetime')}
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 rounded-lg transition-all ${
+            activeTab === 'datetime'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          <span>তারিখ-সময়</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('image')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 rounded-lg transition-all ${
             activeTab === 'image'
               ? 'bg-amber-500 text-slate-950 font-bold shadow'
               : 'text-slate-400 hover:text-white'
           }`}
         >
           <ImageIcon className="w-3.5 h-3.5" />
-          <span>ছবি পজিশন</span>
+          <span>ছবি</span>
         </button>
 
         <button
           onClick={() => setActiveTab('design')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 rounded-lg transition-all ${
             activeTab === 'design'
               ? 'bg-amber-500 text-slate-950 font-bold shadow'
               : 'text-slate-400 hover:text-white'
           }`}
         >
           <Palette className="w-3.5 h-3.5" />
-          <span>থিম ও ফন্ট</span>
+          <span>ডিজাইন</span>
         </button>
 
         <button
           onClick={() => setActiveTab('footer')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 rounded-lg transition-all ${
             activeTab === 'footer'
               ? 'bg-amber-500 text-slate-950 font-bold shadow'
               : 'text-slate-400 hover:text-white'
           }`}
         >
           <Share2 className="w-3.5 h-3.5" />
-          <span>ফুটার ও লোগো</span>
+          <span>ব্র্যান্ডিং</span>
         </button>
       </div>
 
@@ -192,6 +279,65 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
           </div>
 
+          {/* Category / Badge Selector */}
+          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <span>ক্যাটাগরি / নিউজ ব্যাজ:</span>
+              </label>
+              <input
+                type="color"
+                value={data.badgeBgColor || '#e50914'}
+                onChange={(e) => onChange({ badgeBgColor: e.target.value })}
+                title="ব্যাজের ব্যাকগ্রাউন্ড কালার"
+                className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              {CATEGORY_OPTIONS.slice(0, 6).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onChange({ category: cat, customCategory: '' })}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
+                    data.category === cat && !data.customCategory
+                      ? 'bg-red-600 text-white border-red-500 shadow'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-1">
+              {CATEGORY_OPTIONS.slice(6).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onChange({ category: cat, customCategory: '' })}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
+                    data.category === cat && !data.customCategory
+                      ? 'bg-red-600 text-white border-red-500 shadow'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              value={data.customCategory || ''}
+              onChange={(e) => onChange({ customCategory: e.target.value })}
+              placeholder="অথবা কাস্টম ক্যাটাগরি লিখুন..."
+              className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+            />
+          </div>
+
           {/* Headline Text Area */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
@@ -211,8 +357,52 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             />
           </div>
 
+          {/* Reporter / Desk Selection */}
+          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-amber-400" />
+                <span>প্রতিবেদক / রিপোর্টার:</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data.showReporter}
+                  onChange={(e) => onChange({ showReporter: e.target.checked })}
+                  className="accent-amber-500 rounded cursor-pointer"
+                />
+                <span>দেখাবেন</span>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              {REPORTER_OPTIONS.map((rep) => (
+                <button
+                  key={rep}
+                  type="button"
+                  onClick={() => onChange({ reporterName: rep, showReporter: true })}
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all truncate border ${
+                    data.reporterName === rep && data.showReporter
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {rep}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              value={data.reporterName || ''}
+              onChange={(e) => onChange({ reporterName: e.target.value })}
+              placeholder="অথবা প্রতিবেদকের নাম লিখুন..."
+              className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+            />
+          </div>
+
           {/* Detail Tag Option */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-300">
                 ২. বিস্তারিত ট্যাগ (ঐচ্ছিক):
@@ -224,14 +414,151 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 className="accent-amber-500 rounded cursor-pointer"
               />
             </div>
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              {['বিস্তারিত কমেন্টে', 'বিস্তারিত ক্যাপশনে', 'বিস্তারিত ওয়েবসাইটে'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onChange({ detailTag: tag, showDetailTag: true })}
+                  className={`py-1.5 px-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    data.detailTag === tag && data.showDetailTag
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: DATE & ACCURATE TIME */}
+      {activeTab === 'datetime' && (
+        <div className="flex flex-col gap-4">
+          {/* Real-time Sync Banner */}
+          <div className="bg-gradient-to-r from-amber-500/20 via-slate-900 to-sky-500/20 p-3.5 rounded-xl border border-amber-500/30 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                <span className="text-xs font-bold text-amber-400">
+                  সঠিক বাংলা সন, তারিখ ও সময়
+                </span>
+              </div>
+              <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                বাংলা একাডেমি মান ২০১৯
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              সঠিক গ্রেগরীয় ও বাংলা সনের হিসাব স্বয়ংক্রিয়ভাবে তৈরি হয়। এক ক্লিকে বর্তমান লাইভ টাইম ও তারিখ সেট করুন:
+            </p>
+
+            <button
+              type="button"
+              onClick={handleSyncLiveDateTime}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>বর্তমান সঠিক সময় ও তারিখ লোড করুন</span>
+            </button>
+          </div>
+
+          {/* Date & Time Picker Controls */}
+          <div className="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-sky-400" />
+                <span>তারিখ সিলেক্টর:</span>
+              </label>
+              <input
+                type="date"
+                value={data.selectedDateIso || ''}
+                onChange={handleDateChange}
+                className="bg-slate-900 border border-slate-700 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2 outline-none cursor-pointer"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-amber-400" />
+                <span>সময় সিলেক্টর:</span>
+              </label>
+              <input
+                type="time"
+                value={data.selectedTimeStr || ''}
+                onChange={handleTimeChange}
+                className="bg-slate-900 border border-slate-700 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2 outline-none cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Time Display Toggle */}
+          <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold text-slate-200">
+                ফটোকার্ডে সময় প্রদর্শন করুন
+              </span>
+            </div>
             <input
-              type="text"
-              value={data.detailTag}
-              onChange={(e) => onChange({ detailTag: e.target.value })}
-              placeholder="বিস্তারিত কমেন্টে"
-              disabled={!data.showDetailTag}
-              className="bg-slate-950 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-xl p-2.5 outline-none disabled:opacity-40"
+              type="checkbox"
+              checked={data.showTime !== false}
+              onChange={(e) => onChange({ showTime: e.target.checked })}
+              className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
             />
+          </div>
+
+          {/* Direct Manual Customization Box */}
+          <div className="flex flex-col gap-2 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+            <span className="text-xs font-bold text-slate-300">
+              ম্যানুয়াল টেক্সট এডিট (কাস্টম পরিবর্তন):
+            </span>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">বারের নাম:</label>
+              <input
+                type="text"
+                value={data.customDay}
+                onChange={(e) => onChange({ customDay: e.target.value })}
+                placeholder="মঙ্গলবার"
+                className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">ইংরেজি তারিখ (বাংলায়):</label>
+              <input
+                type="text"
+                value={data.customEngDate}
+                onChange={(e) => onChange({ customEngDate: e.target.value })}
+                placeholder="০১ সেপ্টেম্বর ২০২৬"
+                className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">বাংলা সন ও তারিখ (বঙ্গাব্দ):</label>
+              <input
+                type="text"
+                value={data.customBngDate}
+                onChange={(e) => onChange({ customBngDate: e.target.value })}
+                placeholder="১৭ ভাদ্র ১৪৩৩ বঙ্গাব্দ"
+                className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none font-semibold text-amber-300"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">সময় ফরম্যাট:</label>
+              <input
+                type="text"
+                value={data.customTime || ''}
+                onChange={(e) => onChange({ customTime: e.target.value })}
+                placeholder="সন্ধ্যা ০৭:২৭"
+                className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none font-semibold text-yellow-300"
+              />
+            </div>
           </div>
         </div>
       )}

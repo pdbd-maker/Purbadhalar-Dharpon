@@ -144,24 +144,51 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               )}
             </div>
 
-            {/* Date Box */}
-            <div className="text-right leading-tight" style={{ color: '#ffffff' }}>
+            {/* Category Badge in Top Header */}
+            {(data.category || data.customCategory) && (
               <div
+                id="out-category"
+                className="px-3 py-1 rounded-md text-xs font-bold shadow-md tracking-wide"
+                style={{
+                  backgroundColor: data.badgeBgColor || theme.defaultBadgeBg || '#dc2626',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                }}
+              >
+                {data.customCategory || data.category}
+              </div>
+            )}
+
+            {/* Date & Time Box */}
+            <div className="text-right leading-tight flex flex-col items-end" style={{ color: '#ffffff' }}>
+              <div
+                id="out-day"
                 className="font-bold text-sm tracking-wide"
                 style={{ color: theme.accentColor }}
               >
                 {data.customDay}
               </div>
-              <div className="text-xs font-semibold my-0.5" style={{ opacity: 0.95 }}>
+              <div id="out-eng" className="text-xs font-semibold my-0.5" style={{ opacity: 0.95 }}>
                 {data.customEngDate}
               </div>
-              <div className="text-[11px]" style={{ opacity: 0.8 }}>
+              <div id="out-bng" className="text-[11px]" style={{ opacity: 0.85 }}>
                 {data.customBngDate}
               </div>
+              {data.showTime && data.customTime && (
+                <div
+                  id="out-time"
+                  className="text-[10px] font-bold mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/10"
+                  style={{ color: '#fde047' }}
+                >
+                  <span>🕒</span>
+                  <span>{data.customTime}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Content Area (Headline + Detail Tag) */}
+          {/* Content Area (Headline + Detail Tag + Reporter) */}
           <div
             className="absolute left-[22px] right-[22px] z-20 text-left transition-all duration-200 flex flex-col items-start gap-2.5"
             style={{
@@ -191,27 +218,48 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               </div>
             </div>
 
-            {/* Detail Button Tag */}
-            {data.showDetailTag && data.detailTag && (
-              <div
-                id="out-tag"
-                className="inline-flex items-center justify-center px-4 rounded font-bold text-xs shadow-lg"
-                style={{
-                  background: theme.detailTagBg,
-                  color: theme.detailTagText,
-                  height: '30px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  lineHeight: '1.2',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <span className="inline-flex items-center justify-center leading-none">
-                  {data.detailTag}
-                </span>
-              </div>
-            )}
+            {/* Tags & Reporter Bar */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {data.showDetailTag && data.detailTag && (
+                <div
+                  id="out-tag"
+                  className="inline-flex items-center justify-center px-4 rounded font-bold text-xs shadow-lg"
+                  style={{
+                    background: theme.detailTagBg,
+                    color: theme.detailTagText,
+                    height: '30px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: '1.2',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <span className="inline-flex items-center justify-center leading-none">
+                    {data.detailTag}
+                  </span>
+                </div>
+              )}
+
+              {data.showReporter && data.reporterName && (
+                <div
+                  id="out-reporter-box"
+                  className="inline-flex items-center gap-1.5 px-3 rounded font-semibold text-xs shadow-md"
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    color: '#e2e8f0',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    height: '30px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    lineHeight: '1.2',
+                  }}
+                >
+                  <span style={{ color: theme.accentColor }}>✍️</span>
+                  <span id="out-reporter">{data.reporterName}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Footer Social Bar */}
