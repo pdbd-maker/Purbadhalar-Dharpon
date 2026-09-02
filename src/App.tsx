@@ -228,8 +228,8 @@ export default function App() {
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
+          canvas.width = img.naturalWidth || img.width || 800;
+          canvas.height = img.naturalHeight || img.height || 600;
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0);
@@ -253,32 +253,59 @@ export default function App() {
     setIsDownloading(true);
 
     try {
+      // Wait for web fonts (Hind Siliguri, Anek Bangla, SolaimanLipi) to finish loading
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
       const currentMainImg = appMode === 'photocard' ? cardData.mainImgUrl : ytData.mainImgUrl;
       const currentLogo = appMode === 'photocard' ? cardData.logoUrl : ytData.logoUrl;
+      const currentAuthorImg = appMode === 'photocard' ? cardData.authorImgUrl : '';
 
       // Pre-convert image sources to Base64 Data URLs
-      const [dataMainImg, dataLogo] = await Promise.all([
+      const [dataMainImg, dataLogo, dataAuthorImg] = await Promise.all([
         getImageDataUrl(currentMainImg),
         getImageDataUrl(currentLogo),
+        currentAuthorImg ? getImageDataUrl(currentAuthorImg) : Promise.resolve(''),
       ]);
 
       const element = targetRef;
+      const isPortrait = appMode === 'photocard' && cardData.aspectRatio === '4:5';
+      const targetWidth = appMode === 'photocard' ? 540 : 640;
+      const targetHeight = appMode === 'photocard' ? (isPortrait ? 675 : 540) : 360;
+
       const canvas = await html2canvas(element, {
-        scale: 2, // 2x HD DPI resolution
+        scale: 2, // 2x HD DPI resolution (1080x1080, 1080x1350, 1280x720)
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         logging: false,
         backgroundColor: null,
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        windowWidth: element.offsetWidth,
-        windowHeight: element.offsetHeight,
+        width: targetWidth,
+        height: targetHeight,
+        windowWidth: 1200,
+        windowHeight: 1000,
         scrollX: 0,
         scrollY: 0,
         onclone: (clonedDoc, clonedElement) => {
+          if (clonedDoc.body) {
+            clonedDoc.body.style.width = '1200px';
+            clonedDoc.body.style.minWidth = '1200px';
+            clonedDoc.body.style.overflow = 'visible';
+          }
+          if (clonedDoc.documentElement) {
+            clonedDoc.documentElement.style.width = '1200px';
+            clonedDoc.documentElement.style.minWidth = '1200px';
+            clonedDoc.documentElement.style.overflow = 'visible';
+          }
+
           if (clonedElement) {
             clonedElement.style.transform = 'none';
             clonedElement.style.margin = '0';
+            clonedElement.style.position = 'relative';
+            clonedElement.style.left = '0';
+            clonedElement.style.top = '0';
+            clonedElement.style.width = `${targetWidth}px`;
+            clonedElement.style.height = `${targetHeight}px`;
           }
 
           const clonedMainImg = clonedDoc.getElementById('fg-main') as HTMLImageElement | null;
@@ -288,6 +315,10 @@ export default function App() {
           const clonedLogo = clonedDoc.getElementById('card-logo') as HTMLImageElement | null;
           if (clonedLogo && dataLogo) {
             clonedLogo.src = dataLogo;
+          }
+          const clonedAuthorImg = clonedDoc.querySelector('img[alt="' + (cardData.authorName || 'লেখক') + '"]') as HTMLImageElement | null;
+          if (clonedAuthorImg && dataAuthorImg) {
+            clonedAuthorImg.src = dataAuthorImg;
           }
 
           // Force flex centering in html2canvas clone
@@ -431,11 +462,13 @@ export default function App() {
           </div>
 
           {/* Interactive Card Canvas Component */}
-          {appMode === 'photocard' ? (
-            <PhotoCardPreview ref={cardRef} data={cardData} />
-          ) : (
-            <YouTubeThumbnailPreview ref={ytCardRef} data={ytData} />
-          )}
+          <div className="w-full flex justify-center overflow-x-auto py-2">
+            {appMode === 'photocard' ? (
+              <PhotoCardPreview ref={cardRef} data={cardData} />
+            ) : (
+              <YouTubeThumbnailPreview ref={ytCardRef} data={ytData} />
+            )}
+          </div>
         </div>
       </main>
 
