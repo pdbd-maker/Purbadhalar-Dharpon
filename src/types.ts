@@ -20,7 +20,17 @@ export interface ThemeConfig {
   detailTagText: string;
 }
 
+export type PhotoCardType = 'news' | 'opinion';
+
 export interface PhotoCardData {
+  cardType?: PhotoCardType; // 'news' (স্ট্যান্ডার্ড নিউজ) | 'opinion' (মতামত ও কলাম)
+  showCategory?: boolean; // ক্যাটাগরি / ব্যাজ প্রদর্শন ঐচ্ছিক (true/false)
+  // Opinion & Columnist specific fields
+  authorName?: string;
+  authorDesignation?: string;
+  authorImgUrl?: string;
+  showAuthorImg?: boolean;
+  opinionTopic?: string;
   logoUrl: string;
   logoText: string;
   showLogoText: boolean;
@@ -99,9 +109,14 @@ export interface NewsPreset {
   title: string;
   category: string;
   headline: string;
-  reporterName: string;
-  detailTag: string;
+  reporterName?: string;
+  detailTag?: string;
   sampleImgUrl: string;
   themeId: ThemeId;
+  cardType?: PhotoCardType;
+  authorName?: string;
+  authorDesignation?: string;
+  authorImgUrl?: string;
+  showCategory?: boolean;
 }
 

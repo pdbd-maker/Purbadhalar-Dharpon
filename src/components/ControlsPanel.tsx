@@ -55,6 +55,24 @@ const REPORTER_OPTIONS = [
   'ক্রাইম রিপোর্টার',
 ];
 
+const OPINION_CATEGORY_OPTIONS = [
+  'মতামত',
+  'কলাম',
+  'মুক্তমত',
+  'সম্পাদকীয়',
+  'দৃষ্টিভঙ্গি',
+  'খোলা চিঠি',
+  'পূর্বধলা',
+  'বিশেষ কলাম',
+];
+
+const OPINION_SAMPLE_AUTHORS = [
+  { name: 'মাহবুবুর রহমান', desig: 'কলামিস্ট ও লেখক' },
+  { name: 'ডা. মোহাম্মদ ফায়সাল', desig: 'চিকিৎসক ও কলামিস্ট' },
+  { name: 'ড. রফিকুল ইসলাম', desig: 'শিক্ষাবিদ ও গবেষক' },
+  { name: 'আনোয়ার সাদাত', desig: 'লেখক ও রাজনীতি বিশ্লেষক' },
+];
+
 export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   data,
   onChange,
@@ -133,6 +151,21 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           posY: 0,
           posX: 0,
           rotation: 0,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAuthorImgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        onChange({
+          authorImgUrl: result,
+          showAuthorImg: true,
         });
       };
       reader.readAsDataURL(file);
@@ -233,6 +266,44 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
       {/* TAB 1: NEWS CONTENT */}
       {activeTab === 'content' && (
         <div className="flex flex-col gap-4">
+          {/* Card Type Selector (News vs Opinion Column) */}
+          <div className="bg-[#020617] p-2.5 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+              <span>কার্ডের ধরন নির্বাচন করুন:</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onChange({ cardType: 'news' })}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                  data.cardType !== 'opinion'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>📰</span>
+                <span>সাধারণ সংবাদ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    cardType: 'opinion',
+                    category: data.category === 'পূর্বধলা' ? 'মতামত' : data.category,
+                  })
+                }
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                  data.cardType === 'opinion'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>✍️</span>
+                <span>মতামত ও কলাম</span>
+              </button>
+            </div>
+          </div>
+
           {/* Portal Logo Upload Section (Quick Access) */}
           <div className="flex flex-col gap-2 bg-[#020617] p-3 rounded-xl border border-amber-500/30">
             <div className="flex items-center justify-between">
@@ -279,133 +350,293 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
           </div>
 
-          {/* Category / Badge Selector */}
-          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+          {/* Category / Badge Selector (Optional Toggle) */}
+          <div className="flex flex-col gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-amber-400" />
-                <span>ক্যাটাগরি / নিউজ ব্যাজ:</span>
+                <span>ক্যাটাগরি / ব্যাজ (ঐচ্ছিক):</span>
               </label>
-              <input
-                type="color"
-                value={data.badgeBgColor || '#e50914'}
-                onChange={(e) => onChange({ badgeBgColor: e.target.value })}
-                title="ব্যাজের ব্যাকগ্রাউন্ড কালার"
-                className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-              />
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold cursor-pointer bg-slate-900 hover:bg-slate-850 px-2 py-0.5 rounded border border-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={data.showCategory !== false}
+                    onChange={(e) => onChange({ showCategory: e.target.checked })}
+                    className="accent-amber-500 rounded cursor-pointer w-3.5 h-3.5"
+                  />
+                  <span>{data.showCategory !== false ? 'অন (দেখাবেন)' : 'অফ (লুকানো)'}</span>
+                </label>
+                {data.showCategory !== false && (
+                  <input
+                    type="color"
+                    value={data.badgeBgColor || '#e50914'}
+                    onChange={(e) => onChange({ badgeBgColor: e.target.value })}
+                    title="ব্যাজের ব্যাকগ্রাউন্ড কালার"
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                )}
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 mt-1">
-              {CATEGORY_OPTIONS.slice(0, 6).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => onChange({ category: cat, customCategory: '' })}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
-                    data.category === cat && !data.customCategory
-                      ? 'bg-red-600 text-white border-red-500 shadow'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            {data.showCategory !== false ? (
+              <>
+                <div className="grid grid-cols-3 gap-1 mt-1">
+                  {(data.cardType === 'opinion' ? OPINION_CATEGORY_OPTIONS : CATEGORY_OPTIONS.slice(0, 6)).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => onChange({ category: cat, customCategory: '', showCategory: true })}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
+                        data.category === cat && !data.customCategory
+                          ? 'bg-red-600 text-white border-red-500 shadow'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
 
-            <div className="grid grid-cols-3 gap-1">
-              {CATEGORY_OPTIONS.slice(6).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => onChange({ category: cat, customCategory: '' })}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
-                    data.category === cat && !data.customCategory
-                      ? 'bg-red-600 text-white border-red-500 shadow'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+                {data.cardType !== 'opinion' && (
+                  <div className="grid grid-cols-3 gap-1">
+                    {CATEGORY_OPTIONS.slice(6).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => onChange({ category: cat, customCategory: '', showCategory: true })}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
+                          data.category === cat && !data.customCategory
+                            ? 'bg-red-600 text-white border-red-500 shadow'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-            <input
-              type="text"
-              value={data.customCategory || ''}
-              onChange={(e) => onChange({ customCategory: e.target.value })}
-              placeholder="অথবা কাস্টম ক্যাটাগরি লিখুন..."
-              className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
-            />
-          </div>
-
-          {/* Headline Text Area */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-300">
-                ১. খবরের প্রধান শিরোনাম:
-              </label>
-              <span className="text-[11px] text-slate-400 font-mono">
-                {data.headline.length} অক্ষর
-              </span>
-            </div>
-            <textarea
-              rows={3}
-              value={data.headline}
-              onChange={(e) => onChange({ headline: e.target.value })}
-              placeholder="এখানে আপনার নিউজ পোর্টালের ব্রেকিং অথবা প্রধান শিরোনামটি লিখুন..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 outline-none leading-relaxed resize-none transition-colors"
-            />
-          </div>
-
-          {/* Reporter / Desk Selection */}
-          <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-amber-400" />
-                <span>প্রতিবেদক / রিপোর্টার:</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
                 <input
-                  type="checkbox"
-                  checked={data.showReporter}
-                  onChange={(e) => onChange({ showReporter: e.target.checked })}
-                  className="accent-amber-500 rounded cursor-pointer"
+                  type="text"
+                  value={data.customCategory || ''}
+                  onChange={(e) => onChange({ customCategory: e.target.value, showCategory: true })}
+                  placeholder="অথবা কাস্টম ব্যাজ টেক্সট লিখুন..."
+                  className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
                 />
-                <span>দেখাবেন</span>
-              </label>
-            </div>
-
-            <div className="grid grid-cols-3 gap-1 mt-1">
-              {REPORTER_OPTIONS.map((rep) => (
+              </>
+            ) : (
+              <div className="text-[11px] text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 italic flex items-center justify-between">
+                <span>ফটোকার্ডে ক্যাটাগরি ব্যাজ বর্তমানে বন্ধ রয়েছে।</span>
                 <button
-                  key={rep}
                   type="button"
-                  onClick={() => onChange({ reporterName: rep, showReporter: true })}
-                  className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all truncate border ${
-                    data.reporterName === rep && data.showReporter
-                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                  }`}
+                  onClick={() => onChange({ showCategory: true })}
+                  className="text-[10px] font-bold text-amber-400 hover:underline cursor-pointer"
                 >
-                  {rep}
+                  চালু করুন
                 </button>
-              ))}
-            </div>
-
-            <input
-              type="text"
-              value={data.reporterName || ''}
-              onChange={(e) => onChange({ reporterName: e.target.value })}
-              placeholder="অথবা প্রতিবেদকের নাম লিখুন..."
-              className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
-            />
+              </div>
+            )}
           </div>
+
+          {/* OPINION / COLUMNIST SPECIFIC INPUTS */}
+          {data.cardType === 'opinion' ? (
+            <div className="flex flex-col gap-3">
+              {/* Columnist / Author Info Section */}
+              <div className="flex flex-col gap-2.5 bg-slate-950 p-3 rounded-xl border border-amber-500/30">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-amber-400" />
+                    <span>কলামিস্ট / লেখকের তথ্য:</span>
+                  </label>
+                  <label className="flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.showAuthorImg !== false}
+                      onChange={(e) => onChange({ showAuthorImg: e.target.checked })}
+                      className="accent-amber-500 rounded cursor-pointer"
+                    />
+                    <span>ছবি দেখাবেন</span>
+                  </label>
+                </div>
+
+                {/* Quick Author suggestions */}
+                <div className="flex flex-wrap gap-1">
+                  {OPINION_SAMPLE_AUTHORS.map((auth) => (
+                    <button
+                      key={auth.name}
+                      type="button"
+                      onClick={() =>
+                        onChange({ authorName: auth.name, authorDesignation: auth.desig })
+                      }
+                      className="text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-700 px-2 py-1 rounded text-slate-300 hover:text-amber-400 transition-colors"
+                    >
+                      {auth.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] text-slate-400 font-semibold">লেখকের নাম:</label>
+                  <input
+                    type="text"
+                    value={data.authorName || ''}
+                    onChange={(e) => onChange({ authorName: e.target.value })}
+                    placeholder="যেমন: মাহবুবুর রহমান / ডা. মোহাম্মদ ফায়সাল"
+                    className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2.5 outline-none font-semibold"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] text-slate-400 font-semibold">লেখকের পরিচিতি / পদবি:</label>
+                  <input
+                    type="text"
+                    value={data.authorDesignation || ''}
+                    onChange={(e) => onChange({ authorDesignation: e.target.value })}
+                    placeholder="যেমন: কলামিস্ট ও লেখক / গবেষক ও বিশ্লেষক"
+                    className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] text-slate-400 font-semibold">কলামের বিষয় (ঐচ্ছিক):</label>
+                  <input
+                    type="text"
+                    value={data.opinionTopic || ''}
+                    onChange={(e) => onChange({ opinionTopic: e.target.value })}
+                    placeholder="যেমন: নেত্রকোনার উন্নয়ন ভাবনা ও সম্ভাবনা"
+                    className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+                  />
+                </div>
+
+                {/* Author Photo Upload */}
+                <div className="flex flex-col gap-1.5 mt-1 pt-2 border-t border-slate-800">
+                  <label className="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
+                    <span>লেখকের ছবি আপলোড:</span>
+                    {data.authorImgUrl && (
+                      <button
+                        type="button"
+                        onClick={() => onChange({ authorImgUrl: '' })}
+                        className="text-red-400 hover:text-red-300 text-[10px] font-bold"
+                      >
+                        ছবি মুছুন
+                      </button>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 rounded-lg p-2 cursor-pointer text-xs font-bold text-amber-400 transition-all text-center">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{data.authorImgUrl ? 'নতুন ছবি পরিবর্তন' : 'লেখকের ছবি ফাইল সিলেক্ট করুন'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAuthorImgUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {data.authorImgUrl && (
+                      <img
+                        src={data.authorImgUrl}
+                        alt="Author Preview"
+                        className="w-9 h-9 rounded-full object-cover border border-amber-400 shrink-0"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Opinion Headline / Quote Text Area */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300">
+                    মতামত / কলামের মূল উদ্ধৃতি বা বক্তব্য:
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {data.headline.length} অক্ষর
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={data.headline}
+                  onChange={(e) => onChange({ headline: e.target.value })}
+                  placeholder="এখানে মতামত বা কলামের আকর্ষণীয় মূল বাক্য বা উদ্ধৃতি লিখুন..."
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 outline-none leading-relaxed resize-none transition-colors"
+                />
+              </div>
+            </div>
+          ) : (
+            /* STANDARD NEWS INPUTS */
+            <>
+              {/* Headline Text Area */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300">
+                    ১. খবরের প্রধান শিরোনাম:
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {data.headline.length} অক্ষর
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={data.headline}
+                  onChange={(e) => onChange({ headline: e.target.value })}
+                  placeholder="এখানে আপনার নিউজ পোর্টালের ব্রেকিং অথবা প্রধান শিরোনামটি লিখুন..."
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 outline-none leading-relaxed resize-none transition-colors"
+                />
+              </div>
+
+              {/* Reporter / Desk Selection */}
+              <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-amber-400" />
+                    <span>প্রতিবেদক / রিপোর্টার:</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.showReporter}
+                      onChange={(e) => onChange({ showReporter: e.target.checked })}
+                      className="accent-amber-500 rounded cursor-pointer"
+                    />
+                    <span>দেখাবেন</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1 mt-1">
+                  {REPORTER_OPTIONS.map((rep) => (
+                    <button
+                      key={rep}
+                      type="button"
+                      onClick={() => onChange({ reporterName: rep, showReporter: true })}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all truncate border ${
+                        data.reporterName === rep && data.showReporter
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {rep}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={data.reporterName || ''}
+                  onChange={(e) => onChange({ reporterName: e.target.value })}
+                  placeholder="অথবা প্রতিবেদকের নাম লিখুন..."
+                  className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+                />
+              </div>
+            </>
+          )}
 
           {/* Detail Tag Option */}
           <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-300">
-                ২. বিস্তারিত ট্যাগ (ঐচ্ছিক):
+                {data.cardType === 'opinion' ? 'বিস্তারিত ট্যাগ (ঐচ্ছিক):' : '২. বিস্তারিত ট্যাগ (ঐচ্ছিক):'}
               </label>
               <input
                 type="checkbox"
@@ -415,7 +646,10 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               />
             </div>
             <div className="grid grid-cols-3 gap-1 mt-1">
-              {['বিস্তারিত কমেন্টে', 'বিস্তারিত ক্যাপশনে', 'বিস্তারিত ওয়েবসাইটে'].map((tag) => (
+              {(data.cardType === 'opinion'
+                ? ['বিস্তারিত কলামে', 'বিস্তারিত নিবন্ধে', 'বিস্তারিত কমেন্টে']
+                : ['বিস্তারিত কমেন্টে', 'বিস্তারিত ক্যাপশনে', 'বিস্তারিত ওয়েবসাইটে']
+              ).map((tag) => (
                 <button
                   key={tag}
                   type="button"

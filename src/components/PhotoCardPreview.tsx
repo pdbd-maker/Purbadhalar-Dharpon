@@ -144,8 +144,8 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               )}
             </div>
 
-            {/* Category Badge in Top Header */}
-            {(data.category || data.customCategory) && (
+            {/* Category Badge in Top Header (Optional Toggle) */}
+            {data.showCategory !== false && (data.category || data.customCategory) && (
               <div
                 id="out-category"
                 className="px-3 py-1 rounded-md text-xs font-bold shadow-md tracking-wide"
@@ -188,35 +188,147 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
             </div>
           </div>
 
-          {/* Content Area (Headline + Detail Tag + Reporter) */}
+          {/* Content Area (Headline / Opinion Column + Detail Tag + Reporter) */}
           <div
             className="absolute left-[22px] right-[22px] z-20 text-left transition-all duration-200 flex flex-col items-start gap-2.5"
             style={{
               bottom: '58px',
             }}
           >
-            {/* Title Wrapper with Left Border Accent */}
-            <div
-              className="pl-3 w-full"
-              style={{
-                borderLeft: `4px solid ${theme.titleBorderColor}`,
-              }}
-            >
-              <div
-                id="out-title"
-                style={{
-                  fontSize: `${data.fontSize}px`,
-                  lineHeight: data.lineHeight,
-                  textAlign: data.textAlign,
-                  color: '#ffffff',
-                  textShadow:
-                    '0px 2px 4px rgba(0,0,0,1), 0px 4px 10px rgba(0,0,0,0.95)',
-                }}
-                className="font-bold tracking-normal break-words"
-              >
-                {data.headline || 'এখানে আপনার নিউজ পোর্টালের প্রধান শিরোনামটি লিখুন...'}
+            {data.cardType === 'opinion' ? (
+              /* OPINION / COLUMN CARD LAYOUT */
+              <div className="w-full flex flex-col gap-2.5">
+                {/* Author / Columnist Profile Card */}
+                <div
+                  className="flex items-center gap-3 p-2.5 rounded-xl border backdrop-blur-md shadow-2xl"
+                  style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.88)',
+                    borderColor: 'rgba(255, 255, 255, 0.18)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+                  }}
+                >
+                  {data.showAuthorImg !== false && (
+                    <div className="relative shrink-0">
+                      {data.authorImgUrl ? (
+                        <img
+                          src={data.authorImgUrl}
+                          alt={data.authorName || 'লেখক'}
+                          crossOrigin="anonymous"
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover shadow-lg"
+                          style={{
+                            border: `2px solid ${theme.accentColor || '#f59e0b'}`,
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-bold text-lg shadow-lg"
+                          style={{
+                            backgroundColor: theme.titleBorderColor || '#e50914',
+                            color: '#ffffff',
+                            border: `2px solid ${theme.accentColor || '#f59e0b'}`,
+                          }}
+                        >
+                          ✍️
+                        </div>
+                      )}
+                      <div
+                        className="absolute -bottom-1 -right-1 text-[9px] font-extrabold px-1.5 py-0.2 rounded shadow"
+                        style={{
+                          backgroundColor: theme.accentColor || '#f59e0b',
+                          color: '#0f172a',
+                        }}
+                      >
+                        কলাম
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-extrabold text-base sm:text-lg leading-tight truncate tracking-wide"
+                        style={{
+                          color: '#ffffff',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                        }}
+                      >
+                        {data.authorName || 'মাহবুবুর রহমান'}
+                      </span>
+                    </div>
+
+                    <span
+                      className="text-xs font-semibold leading-tight line-clamp-1 mt-0.5"
+                      style={{
+                        color: theme.accentColor || '#fbbf24',
+                      }}
+                    >
+                      {data.authorDesignation || 'কলামিস্ট ও লেখক'}
+                    </span>
+
+                    {data.opinionTopic && (
+                      <span className="text-[11px] text-slate-300 font-medium truncate mt-0.5 opacity-90">
+                        বিষয়: {data.opinionTopic}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Opinion Quote / Headline */}
+                <div
+                  className="pl-3.5 relative w-full"
+                  style={{
+                    borderLeft: `4px solid ${theme.accentColor || '#f59e0b'}`,
+                  }}
+                >
+                  <span
+                    className="absolute -top-3.5 left-1 text-2xl font-serif font-black select-none pointer-events-none opacity-40"
+                    style={{ color: theme.accentColor || '#fbbf24' }}
+                  >
+                    “
+                  </span>
+                  <div
+                    id="out-title"
+                    style={{
+                      fontSize: `${data.fontSize}px`,
+                      lineHeight: data.lineHeight,
+                      textAlign: data.textAlign,
+                      color: '#ffffff',
+                      textShadow:
+                        '0px 2px 4px rgba(0,0,0,1), 0px 4px 10px rgba(0,0,0,0.95)',
+                    }}
+                    className="font-bold tracking-normal break-words"
+                  >
+                    {data.headline || 'মতামত বা কলামের মূল উদ্ধৃতি বা বক্তব্য এখানে লিখুন...'}
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* STANDARD NEWS CARD LAYOUT */
+              <>
+                {/* Title Wrapper with Left Border Accent */}
+                <div
+                  className="pl-3 w-full"
+                  style={{
+                    borderLeft: `4px solid ${theme.titleBorderColor}`,
+                  }}
+                >
+                  <div
+                    id="out-title"
+                    style={{
+                      fontSize: `${data.fontSize}px`,
+                      lineHeight: data.lineHeight,
+                      textAlign: data.textAlign,
+                      color: '#ffffff',
+                      textShadow:
+                        '0px 2px 4px rgba(0,0,0,1), 0px 4px 10px rgba(0,0,0,0.95)',
+                    }}
+                    className="font-bold tracking-normal break-words"
+                  >
+                    {data.headline || 'এখানে আপনার নিউজ পোর্টালের প্রধান শিরোনামটি লিখুন...'}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Tags & Reporter Bar */}
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -241,7 +353,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
                 </div>
               )}
 
-              {data.showReporter && data.reporterName && (
+              {data.cardType !== 'opinion' && data.showReporter && data.reporterName && (
                 <div
                   id="out-reporter-box"
                   className="inline-flex items-center gap-1.5 px-3 rounded font-semibold text-xs shadow-md"

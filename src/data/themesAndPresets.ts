@@ -91,6 +91,22 @@ export const SAMPLE_NEWS_PRESETS: NewsPreset[] = [
     detailTag: 'বিস্তারিত কমেন্টে',
     sampleImgUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1080&q=80',
     themeId: 'royal_blue',
+    cardType: 'news',
+    showCategory: true,
+  },
+  {
+    id: 'opinion_column',
+    title: 'মতামত / কলাম কার্ড',
+    category: 'মতামত',
+    headline: 'নেত্রকোনার হাওরাঞ্চলের অর্থনীতি ও আধুনিক কৃষির সম্ভাবনা নিয়ে জরুরি পদক্ষেপ প্রয়োজন',
+    sampleImgUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1080&q=80',
+    themeId: 'crimson_gold',
+    cardType: 'opinion',
+    authorName: 'মাহবুবুর রহমান',
+    authorDesignation: 'কলামিস্ট ও কৃষি অর্থনীতি গবেষক',
+    authorImgUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    detailTag: 'বিস্তারিত কলামে',
+    showCategory: true,
   },
   {
     id: 'breaking_news',
@@ -101,6 +117,8 @@ export const SAMPLE_NEWS_PRESETS: NewsPreset[] = [
     detailTag: 'বিস্তারিত কমেন্টে',
     sampleImgUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1080&q=80',
     themeId: 'breaking_red',
+    cardType: 'news',
+    showCategory: true,
   },
   {
     id: 'politics_news',
@@ -111,6 +129,8 @@ export const SAMPLE_NEWS_PRESETS: NewsPreset[] = [
     detailTag: 'বিস্তারিত ক্যাপশনে',
     sampleImgUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1080&q=80',
     themeId: 'dark_navy',
+    cardType: 'news',
+    showCategory: true,
   },
   {
     id: 'sports_news',
@@ -121,6 +141,8 @@ export const SAMPLE_NEWS_PRESETS: NewsPreset[] = [
     detailTag: 'বিস্তারিত ওয়েবসাইটে',
     sampleImgUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1080&q=80',
     themeId: 'emerald_green',
+    cardType: 'news',
+    showCategory: true,
   },
 ];
 
