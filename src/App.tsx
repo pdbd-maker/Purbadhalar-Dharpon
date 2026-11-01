@@ -33,11 +33,13 @@ export default function App() {
 
     return {
       cardType: 'news',
+      opinionStyle: 'split_editorial',
       showCategory: true,
       authorName: 'মাহবুবুর রহমান',
       authorDesignation: 'কলামিস্ট ও লেখক',
       authorImgUrl: '',
       showAuthorImg: true,
+      authorImgSize: 92,
       opinionTopic: '',
       logoUrl: savedLogo,
       logoText: 'পূর্বধলার দর্পণ',
@@ -143,6 +145,10 @@ export default function App() {
         mainImgUrl: preset.sampleImgUrl,
         themeId: preset.themeId,
         cardType: preset.cardType || 'news',
+        opinionStyle: preset.opinionStyle || prev.opinionStyle || 'split_editorial',
+        opinionTopic: preset.opinionTopic || prev.opinionTopic,
+        badgeBgColor: preset.badgeBgColor || prev.badgeBgColor,
+        aspectRatio: preset.aspectRatio || prev.aspectRatio,
         authorName: preset.authorName || prev.authorName,
         authorDesignation: preset.authorDesignation || prev.authorDesignation,
         authorImgUrl: preset.authorImgUrl || prev.authorImgUrl,
@@ -271,8 +277,9 @@ export default function App() {
 
       const element = targetRef;
       const isPortrait = appMode === 'photocard' && cardData.aspectRatio === '4:5';
-      const targetWidth = appMode === 'photocard' ? 540 : 640;
-      const targetHeight = appMode === 'photocard' ? (isPortrait ? 675 : 540) : 360;
+      const isLandscape = appMode === 'photocard' && cardData.aspectRatio === '16:9';
+      const targetWidth = appMode === 'photocard' ? (isLandscape ? 640 : 540) : 640;
+      const targetHeight = appMode === 'photocard' ? (isLandscape ? 360 : (isPortrait ? 675 : 540)) : 360;
 
       const canvas = await html2canvas(element, {
         scale: 2, // 2x HD DPI resolution (1080x1080, 1080x1350, 1280x720)
@@ -316,7 +323,9 @@ export default function App() {
           if (clonedLogo && dataLogo) {
             clonedLogo.src = dataLogo;
           }
-          const clonedAuthorImg = clonedDoc.querySelector('img[alt="' + (cardData.authorName || 'লেখক') + '"]') as HTMLImageElement | null;
+          const clonedAuthorImg =
+            (clonedDoc.getElementById('out-author-img') as HTMLImageElement | null) ||
+            (clonedDoc.querySelector('img[alt="' + (cardData.authorName || 'লেখক') + '"]') as HTMLImageElement | null);
           if (clonedAuthorImg && dataAuthorImg) {
             clonedAuthorImg.src = dataAuthorImg;
           }

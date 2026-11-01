@@ -56,6 +56,7 @@ const REPORTER_OPTIONS = [
 ];
 
 const OPINION_CATEGORY_OPTIONS = [
+  'মত-দ্বিমত',
   'মতামত',
   'কলাম',
   'মুক্তমত',
@@ -67,10 +68,11 @@ const OPINION_CATEGORY_OPTIONS = [
 ];
 
 const OPINION_SAMPLE_AUTHORS = [
-  { name: 'মাহবুবুর রহমান', desig: 'কলামিস্ট ও লেখক' },
-  { name: 'ডা. মোহাম্মদ ফায়সাল', desig: 'চিকিৎসক ও কলামিস্ট' },
-  { name: 'ড. রফিকুল ইসলাম', desig: 'শিক্ষাবিদ ও গবেষক' },
-  { name: 'আনোয়ার সাদাত', desig: 'লেখক ও রাজনীতি বিশ্লেষক' },
+  { name: 'এম গোলাম মোস্তফা ভুইয়া', desig: 'রাজনৈতিক বিশ্লেষক ও কলাম লেখক', topic: 'জাতীয় অর্থনীতি' },
+  { name: 'মাহবুবুর রহমান', desig: 'কলামিস্ট ও লেখক', topic: 'উন্নয়ন ও সম্ভাবনা' },
+  { name: 'ডা. মোহাম্মদ ফায়সাল', desig: 'চিকিৎসক ও কলামিস্ট', topic: 'স্বাস্থ্য ও চিকিৎসা' },
+  { name: 'ড. রফিকুল ইসলাম', desig: 'শিক্ষাবিদ ও গবেষক', topic: 'শিক্ষা সংস্কার' },
+  { name: 'আনোয়ার সাদাত', desig: 'লেখক ও রাজনীতি বিশ্লেষক', topic: 'জাতীয় রাজনীতি' },
 ];
 
 export const ControlsPanel: React.FC<ControlsPanelProps> = ({
@@ -442,6 +444,53 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           {/* OPINION / COLUMNIST SPECIFIC INPUTS */}
           {data.cardType === 'opinion' ? (
             <div className="flex flex-col gap-3">
+              {/* Layout Style Selector for Opinion & Column */}
+              <div className="flex flex-col gap-2 bg-slate-950 p-3 rounded-xl border border-amber-500/40">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <span>মতামত ফটোকার্ডের ডিজাইন স্টাইল:</span>
+                  </label>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 font-semibold px-2 py-0.5 rounded">
+                    {(data.opinionStyle || 'split_editorial') === 'split_editorial' ? 'স্প্লিট ব্যানার' : 'ক্লাসিক ডার্ক'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        opinionStyle: 'split_editorial',
+                        category: data.category || 'মত-দ্বিমত',
+                        badgeBgColor: data.badgeBgColor || '#c2410c',
+                        aspectRatio: data.aspectRatio || '16:9',
+                      })
+                    }
+                    className={`p-2.5 rounded-lg text-xs font-bold transition-all border flex flex-col items-center text-center gap-1 ${
+                      (data.opinionStyle || 'split_editorial') === 'split_editorial'
+                        ? 'bg-amber-500/25 text-amber-300 border-amber-400 shadow-md ring-1 ring-amber-500/50'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="text-sm">📰 মত-দ্বিমত (স্প্লিট)</span>
+                    <span className="text-[10px] font-normal text-slate-400">ছবিতে দেয়া নতুন স্প্লিট ডিজাইন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onChange({ opinionStyle: 'classic_overlay' })}
+                    className={`p-2.5 rounded-lg text-xs font-bold transition-all border flex flex-col items-center text-center gap-1 ${
+                      data.opinionStyle === 'classic_overlay'
+                        ? 'bg-amber-500/25 text-amber-300 border-amber-400 shadow-md ring-1 ring-amber-500/50'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="text-sm">🖼️ ক্লাসিক ডার্ক</span>
+                    <span className="text-[10px] font-normal text-slate-400">ফুল ব্যাকগ্রাউন্ড ডার্ক ওভারলে</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Columnist / Author Info Section */}
               <div className="flex flex-col gap-2.5 bg-slate-950 p-3 rounded-xl border border-amber-500/30">
                 <div className="flex items-center justify-between">
@@ -467,7 +516,11 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       key={auth.name}
                       type="button"
                       onClick={() =>
-                        onChange({ authorName: auth.name, authorDesignation: auth.desig })
+                        onChange({
+                          authorName: auth.name,
+                          authorDesignation: auth.desig,
+                          opinionTopic: auth.topic || data.opinionTopic,
+                        })
                       }
                       className="text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-700 px-2 py-1 rounded text-slate-300 hover:text-amber-400 transition-colors"
                     >
@@ -482,7 +535,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     type="text"
                     value={data.authorName || ''}
                     onChange={(e) => onChange({ authorName: e.target.value })}
-                    placeholder="যেমন: মাহবুবুর রহমান / ডা. মোহাম্মদ ফায়সাল"
+                    placeholder="যেমন: এম গোলাম মোস্তফা ভুইয়া / মাহবুবুর রহমান"
                     className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2.5 outline-none font-semibold"
                   />
                 </div>
@@ -493,19 +546,22 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     type="text"
                     value={data.authorDesignation || ''}
                     onChange={(e) => onChange({ authorDesignation: e.target.value })}
-                    placeholder="যেমন: কলামিস্ট ও লেখক / গবেষক ও বিশ্লেষক"
+                    placeholder="যেমন: রাজনৈতিক বিশ্লেষক ও কলাম লেখক"
                     className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] text-slate-400 font-semibold">কলামের বিষয় (ঐচ্ছিক):</label>
+                  <label className="text-[11px] text-amber-300 font-bold flex items-center justify-between">
+                    <span>কলামের বিষয় / টপিক (বড় হেডার):</span>
+                    <span className="text-[10px] text-slate-400">যেমন: জাতীয় অর্থনীতি</span>
+                  </label>
                   <input
                     type="text"
                     value={data.opinionTopic || ''}
                     onChange={(e) => onChange({ opinionTopic: e.target.value })}
-                    placeholder="যেমন: নেত্রকোনার উন্নয়ন ভাবনা ও সম্ভাবনা"
-                    className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
+                    placeholder="যেমন: জাতীয় অর্থনীতি / উন্নয়ন ভাবনা"
+                    className="bg-slate-900 border border-amber-500/40 focus:border-amber-400 text-amber-200 text-xs rounded-lg p-2 outline-none font-semibold"
                   />
                 </div>
 
@@ -538,11 +594,71 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       <img
                         src={data.authorImgUrl}
                         alt="Author Preview"
-                        className="w-9 h-9 rounded-full object-cover border border-amber-400 shrink-0"
+                        className="w-10 h-10 rounded-full object-cover border border-amber-400 shrink-0"
                       />
                     )}
                   </div>
                 </div>
+
+                {/* Author Photo Size Controls */}
+                {data.showAuthorImg !== false && (
+                  <div className="flex flex-col gap-1.5 mt-1 pt-2 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-amber-400 font-bold">
+                        কলামিস্টের ছবির সাইজ:
+                      </span>
+                      <span className="text-[11px] text-slate-300 font-mono font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">
+                        {data.authorImgSize || 90}px
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onChange({ authorImgSize: 72 })}
+                        className={`py-1 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          (data.authorImgSize || 90) === 72
+                            ? 'bg-amber-500 text-slate-950 border-amber-400'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        মাঝারি (৭২px)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onChange({ authorImgSize: 92 })}
+                        className={`py-1 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          (data.authorImgSize || 90) === 92 || (data.authorImgSize || 90) === 90
+                            ? 'bg-amber-500 text-slate-950 border-amber-400'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        বড় (৯২px)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onChange({ authorImgSize: 110 })}
+                        className={`py-1 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          (data.authorImgSize || 90) === 110
+                            ? 'bg-amber-500 text-slate-950 border-amber-400'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        অতিরিক্ত বড় (১১০px)
+                      </button>
+                    </div>
+
+                    <input
+                      type="range"
+                      min={60}
+                      max={130}
+                      step={2}
+                      value={data.authorImgSize || 90}
+                      onChange={(e) => onChange({ authorImgSize: Number(e.target.value) })}
+                      className="w-full accent-amber-500 cursor-pointer mt-1"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Opinion Headline / Quote Text Area */}

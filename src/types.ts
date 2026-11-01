@@ -21,15 +21,18 @@ export interface ThemeConfig {
 }
 
 export type PhotoCardType = 'news' | 'opinion';
+export type OpinionStyle = 'split_editorial' | 'classic_overlay';
 
 export interface PhotoCardData {
   cardType?: PhotoCardType; // 'news' (স্ট্যান্ডার্ড নিউজ) | 'opinion' (মতামত ও কলাম)
+  opinionStyle?: OpinionStyle; // 'split_editorial' ('মত-দ্বিমত' স্প্লিট ব্যানার) | 'classic_overlay' (ক্লাসিক ওভারলে)
   showCategory?: boolean; // ক্যাটাগরি / ব্যাজ প্রদর্শন ঐচ্ছিক (true/false)
   // Opinion & Columnist specific fields
   authorName?: string;
   authorDesignation?: string;
   authorImgUrl?: string;
   showAuthorImg?: boolean;
+  authorImgSize?: number; // কলামিস্টের ছবির সাইজ (px)
   opinionTopic?: string;
   logoUrl: string;
   logoText: string;
@@ -114,9 +117,13 @@ export interface NewsPreset {
   sampleImgUrl: string;
   themeId: ThemeId;
   cardType?: PhotoCardType;
+  opinionStyle?: OpinionStyle;
+  opinionTopic?: string;
   authorName?: string;
   authorDesignation?: string;
   authorImgUrl?: string;
   showCategory?: boolean;
+  aspectRatio?: AspectRatio;
+  badgeBgColor?: string;
 }
 
