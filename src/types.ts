@@ -71,6 +71,8 @@ export interface PhotoCardData {
   overlayOpacity: number;
   filterBrightness: number;
   filterContrast: number;
+  filterSaturate?: number;
+  autoEnhanced?: boolean;
 }
 
 export interface YouTubeThumbnailData {
@@ -105,6 +107,8 @@ export interface YouTubeThumbnailData {
   layoutStyle: 'bottom_pill' | 'split_badge' | 'left_bar' | 'center_hero' | 'top_banner';
   filterBrightness: number;
   filterContrast: number;
+  filterSaturate?: number;
+  autoEnhanced?: boolean;
 }
 
 export interface NewsPreset {

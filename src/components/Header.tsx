@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Code2, Youtube, Facebook } from 'lucide-react';
+import { Download, Code2 } from 'lucide-react';
 import { AspectRatio, ThemeId, AppMode } from '../types';
 import { THEMES } from '../data/themesAndPresets';
 
@@ -47,39 +47,9 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              ফেসবুক ফটোকার্ড ও ইউটিউব থিউমনেইল জেনারেটর
+              প্রেস কোয়ালিটি ফেসবুক ফটোকার্ড জেনারেটর
             </p>
           </div>
-        </div>
-
-        {/* Main App Mode Tabs (Facebook vs YouTube) */}
-        <div className="flex bg-[#0f172a] p-1.5 rounded-xl border border-slate-800 text-xs shadow-inner">
-          <button
-            onClick={() => setAppMode('photocard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-              appMode === 'photocard'
-                ? 'bg-amber-500 text-slate-950 shadow-md'
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <Facebook className="w-4 h-4 text-blue-500" />
-            <span>ফেসবুক ফটোকার্ড</span>
-          </button>
-
-          <button
-            onClick={() => setAppMode('youtube_thumbnail')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-              appMode === 'youtube_thumbnail'
-                ? 'bg-red-600 text-white shadow-md shadow-red-900/40'
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <Youtube className="w-4 h-4 text-red-400" />
-            <span>ইউটিউব থাম্বনেইল মেকার</span>
-            <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.2 rounded font-black">
-              ২০টি
-            </span>
-          </button>
         </div>
 
         {/* Quick Toolbar Controls */}
@@ -145,11 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Download className="w-4 h-4" />
             <span>
-              {isDownloading
-                ? 'ডাউনলোড হচ্ছে...'
-                : appMode === 'youtube_thumbnail'
-                ? 'থাম্বনেইল ডাউনলোড (PNG)'
-                : 'ফটোকার্ড ডাউনলোড (PNG)'}
+              {isDownloading ? 'ডাউনলোড হচ্ছে...' : 'ফটোকার্ড ডাউনলোড (PNG)'}
             </span>
           </button>
         </div>

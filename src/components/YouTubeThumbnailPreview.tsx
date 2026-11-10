@@ -116,7 +116,7 @@ export const YouTubeThumbnailPreview = forwardRef<
             }}
             style={{
               transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
-              filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+              filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%) saturate(${data.filterSaturate || 100}%)`,
             }}
           />
         </>

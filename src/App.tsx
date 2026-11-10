@@ -3,23 +3,13 @@ import html2canvas from 'html2canvas-pro';
 import { Header } from './components/Header';
 import { PhotoCardPreview } from './components/PhotoCardPreview';
 import { ControlsPanel } from './components/ControlsPanel';
-import { YouTubeThumbnailPreview } from './components/YouTubeThumbnailPreview';
-import { YouTubeControlsPanel } from './components/YouTubeControlsPanel';
 import { OfflineCodeModal } from './components/OfflineCodeModal';
-import { PhotoCardData, YouTubeThumbnailData, AppMode } from './types';
+import { PhotoCardData, AppMode } from './types';
 import { SAMPLE_NEWS_PRESETS } from './data/themesAndPresets';
-import { YOUTUBE_PRESETS } from './data/youtubePresets';
-import {
-  getBengaliDayName,
-  getFormattedEnglishDate,
-  getFormattedBengaliEraDate,
-  getFormattedBengaliTime,
-  getFullBengaliDateTimeBundle,
-} from './utils/dateUtils';
+import { getFullBengaliDateTimeBundle } from './utils/dateUtils';
 
 export default function App() {
   const cardRef = useRef<HTMLDivElement>(null);
-  const ytCardRef = useRef<HTMLDivElement>(null);
   const [appMode, setAppMode] = useState<AppMode>('photocard');
   const [isDownloading, setIsDownloading] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
@@ -34,13 +24,13 @@ export default function App() {
     return {
       cardType: 'news',
       opinionStyle: 'split_editorial',
-      showCategory: true,
-      authorName: 'মাহবুবুর রহমান',
-      authorDesignation: 'কলামিস্ট ও লেখক',
-      authorImgUrl: '',
+      showCategory: false,
+      authorName: 'এম গোলাম মোস্তফা ভুইয়া',
+      authorDesignation: 'রাজনৈতিক বিশ্লেষক ও কলাম লেখক',
+      authorImgUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
       showAuthorImg: true,
       authorImgSize: 92,
-      opinionTopic: '',
+      opinionTopic: 'জাতীয় অর্থনীতি',
       logoUrl: savedLogo,
       logoText: 'পূর্বধলার দর্পণ',
       showLogoText: !savedLogo,
@@ -50,7 +40,7 @@ export default function App() {
       posY: 0,
       posX: 0,
       rotation: 0,
-      category: 'পূর্বধলা',
+      category: '',
       customCategory: '',
       badgeBgColor: '#e50914',
       headline:
@@ -59,16 +49,16 @@ export default function App() {
       lineHeight: 1.38,
       textAlign: 'left',
       fontFamily: 'SolaimanLipi',
-      reporterName: 'পূর্বধলা প্রতিনিধি',
-      showReporter: true,
+      reporterName: '',
+      showReporter: false,
       useCustomDate: false,
       customDay: dtBundle.day,
       customEngDate: dtBundle.engDate,
       customBngDate: dtBundle.bngDate,
-      customTime: dtBundle.time,
-      showTime: true,
+      customTime: '',
+      showTime: false,
       selectedDateIso: dtBundle.isoDate,
-      selectedTimeStr: dtBundle.timeStr,
+      selectedTimeStr: '',
       detailTag: 'বিস্তারিত কমেন্টে',
       showDetailTag: true,
       fbHandle: '@purbadhala',
@@ -80,43 +70,7 @@ export default function App() {
       overlayOpacity: 0.85,
       filterBrightness: 100,
       filterContrast: 100,
-    };
-  });
-
-  // Initial YouTube Thumbnail State
-  const [ytData, setYtData] = useState<YouTubeThumbnailData>(() => {
-    const defaultPreset = YOUTUBE_PRESETS[0];
-    return {
-      headline: defaultPreset.headline,
-      subTitle: defaultPreset.subTitle || '',
-      badgeText: defaultPreset.badgeText,
-      badgeBg: defaultPreset.badgeBg,
-      badgeTextColor: defaultPreset.badgeTextColor,
-      highlightWord: defaultPreset.highlightWord || '',
-      highlightBg: defaultPreset.highlightBg || '#facc15',
-      mainImgUrl: defaultPreset.sampleImgUrl,
-      galleryImages: [],
-      collageStyle: 'auto',
-      zoom: 1,
-      posX: 0,
-      posY: 0,
-      rotation: 0,
-      themeId: defaultPreset.themeId,
-      fontFamily: 'SolaimanLipi',
-      fontSize: 34,
-      lineHeight: 1.25,
-      overlayOpacity: 0.85,
-      showPlayIcon: true,
-      showLiveDot: true,
-      showChannelLogo: true,
-      logoUrl: '',
-      channelName: 'পূর্বধলার দর্পণ',
-      ytHandle: 'YouTube / @purbadhala',
-      targetPlatform: 'youtube',
-      aspectRatio: '16:9',
-      layoutStyle: defaultPreset.layoutStyle,
-      filterBrightness: 100,
-      filterContrast: 100,
+      filterSaturate: 100,
     };
   });
 
@@ -127,10 +81,6 @@ export default function App() {
 
   const updateCardData = (updated: Partial<PhotoCardData>) => {
     setCardData((prev) => ({ ...prev, ...updated }));
-  };
-
-  const updateYtData = (updated: Partial<YouTubeThumbnailData>) => {
-    setYtData((prev) => ({ ...prev, ...updated }));
   };
 
   const handleApplyPreset = (presetId: string) => {
@@ -161,53 +111,18 @@ export default function App() {
     }
   };
 
-  const handleApplyYTPreset = (presetId: string) => {
-    const preset = YOUTUBE_PRESETS.find((p) => p.id === presetId);
-    if (preset) {
-      setYtData((prev) => ({
-        ...prev,
-        headline: preset.headline,
-        subTitle: preset.subTitle || '',
-        badgeText: preset.badgeText,
-        badgeBg: preset.badgeBg,
-        badgeTextColor: preset.badgeTextColor,
-        highlightWord: preset.highlightWord || '',
-        highlightBg: preset.highlightBg || '#facc15',
-        mainImgUrl: preset.sampleImgUrl,
-        themeId: preset.themeId,
-        layoutStyle: preset.layoutStyle,
-        zoom: 1,
-        posY: 0,
-        posX: 0,
-      }));
-      showToast(`'${preset.title}' ইউটিউব থাম্বনেইল লোড হয়েছে!`);
-    }
-  };
-
   const handleResetTransforms = () => {
-    if (appMode === 'photocard') {
-      setCardData((prev) => ({
-        ...prev,
-        zoom: 1,
-        posY: 0,
-        posX: 0,
-        rotation: 0,
-        overlayOpacity: 0.85,
-        filterBrightness: 100,
-        filterContrast: 100,
-      }));
-    } else {
-      setYtData((prev) => ({
-        ...prev,
-        zoom: 1,
-        posY: 0,
-        posX: 0,
-        rotation: 0,
-        overlayOpacity: 0.85,
-        filterBrightness: 100,
-        filterContrast: 100,
-      }));
-    }
+    setCardData((prev) => ({
+      ...prev,
+      zoom: 1,
+      posY: 0,
+      posX: 0,
+      rotation: 0,
+      overlayOpacity: 0.85,
+      filterBrightness: 100,
+      filterContrast: 100,
+      filterSaturate: 100,
+    }));
     showToast('ছবির পজিশন ও জুম রিসেট করা হয়েছে!');
   };
 
@@ -254,7 +169,7 @@ export default function App() {
 
   // High-Resolution Export Handler
   const handleDownloadPNG = async () => {
-    const targetRef = appMode === 'photocard' ? cardRef.current : ytCardRef.current;
+    const targetRef = cardRef.current;
     if (!targetRef) return;
     setIsDownloading(true);
 
@@ -264,9 +179,9 @@ export default function App() {
         await document.fonts.ready;
       }
 
-      const currentMainImg = appMode === 'photocard' ? cardData.mainImgUrl : ytData.mainImgUrl;
-      const currentLogo = appMode === 'photocard' ? cardData.logoUrl : ytData.logoUrl;
-      const currentAuthorImg = appMode === 'photocard' ? cardData.authorImgUrl : '';
+      const currentMainImg = cardData.mainImgUrl;
+      const currentLogo = cardData.logoUrl;
+      const currentAuthorImg = cardData.authorImgUrl || '';
 
       // Pre-convert image sources to Base64 Data URLs
       const [dataMainImg, dataLogo, dataAuthorImg] = await Promise.all([
@@ -276,10 +191,10 @@ export default function App() {
       ]);
 
       const element = targetRef;
-      const isPortrait = appMode === 'photocard' && cardData.aspectRatio === '4:5';
-      const isLandscape = appMode === 'photocard' && cardData.aspectRatio === '16:9';
-      const targetWidth = appMode === 'photocard' ? (isLandscape ? 640 : 540) : 640;
-      const targetHeight = appMode === 'photocard' ? (isLandscape ? 360 : (isPortrait ? 675 : 540)) : 360;
+      const isPortrait = cardData.aspectRatio === '4:5';
+      const isLandscape = cardData.aspectRatio === '16:9';
+      const targetWidth = isLandscape ? 640 : 540;
+      const targetHeight = isLandscape ? 360 : (isPortrait ? 675 : 540);
 
       const canvas = await html2canvas(element, {
         scale: 2, // 2x HD DPI resolution (1080x1080, 1080x1350, 1280x720)
@@ -389,21 +304,13 @@ export default function App() {
 
       const image = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
-      const filenamePrefix =
-        appMode === 'youtube_thumbnail'
-          ? 'Purbadhalar_Dhorpon_YouTube_Thumbnail'
-          : 'Purbadhalar_Dhorpon_PhotoCard';
-      link.download = `${filenamePrefix}_${Date.now()}.png`;
+      link.download = `Purbadhalar_Dhorpon_PhotoCard_${Date.now()}.png`;
       link.href = image;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      showToast(
-        appMode === 'youtube_thumbnail'
-          ? 'ইউটিউব থাম্বনেইল সফলভাবে HD PNG হিসেবে ডাউনলোড হয়েছে!'
-          : 'ফটোকার্ড সফলভাবে এইচডি PNG হিসেবে ডাউনলোড হয়েছে!'
-      );
+      showToast('ফটোকার্ড সফলভাবে এইচডি PNG হিসেবে ডাউনলোড হয়েছে!');
     } catch (err) {
       console.error('Download error:', err);
       showToast('ডাউনলোডে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।');
@@ -427,12 +334,8 @@ export default function App() {
         setAppMode={setAppMode}
         aspectRatio={cardData.aspectRatio}
         setAspectRatio={(ratio) => updateCardData({ aspectRatio: ratio })}
-        activeThemeId={appMode === 'photocard' ? cardData.themeId : ytData.themeId}
-        setThemeId={(themeId) =>
-          appMode === 'photocard'
-            ? updateCardData({ themeId })
-            : updateYtData({ themeId })
-        }
+        activeThemeId={cardData.themeId}
+        setThemeId={(themeId) => updateCardData({ themeId })}
         onApplyPreset={handleApplyPreset}
         onOpenOfflineCodeModal={() => setIsOfflineModalOpen(true)}
         onDownloadPNG={handleDownloadPNG}
@@ -441,42 +344,27 @@ export default function App() {
 
       {/* Main App Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Side: Controls Panel depending on AppMode */}
+        {/* Left Side: Controls Panel */}
         <div className="lg:col-span-5 w-full flex justify-center">
-          {appMode === 'photocard' ? (
-            <ControlsPanel
-              data={cardData}
-              onChange={updateCardData}
-              onApplyPreset={handleApplyPreset}
-              onResetTransforms={handleResetTransforms}
-            />
-          ) : (
-            <YouTubeControlsPanel
-              data={ytData}
-              onChange={updateYtData}
-              onApplyPreset={handleApplyYTPreset}
-              onResetTransforms={handleResetTransforms}
-            />
-          )}
+          <ControlsPanel
+            data={cardData}
+            onChange={updateCardData}
+            onApplyPreset={handleApplyPreset}
+            onResetTransforms={handleResetTransforms}
+          />
         </div>
 
         {/* Right Side: Live Canvas Stage */}
         <div className="lg:col-span-7 w-full flex flex-col items-center justify-center bg-[#0f172a]/90 border border-slate-800 rounded-2xl p-4 md:p-8 min-h-[600px] shadow-2xl relative">
           <div className="mb-4 text-center flex items-center justify-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-sky-400 bg-sky-500/10 px-3.5 py-1.5 rounded-full border border-sky-500/20 shadow-sm">
-              {appMode === 'photocard'
-                ? 'ফেসবুক ফটোকার্ড প্রিভিউ (Live Canvas)'
-                : 'ইউটিউব ১৬:৯ থাম্বনেইল প্রিভিউ (HD 1280x720)'}
+              ফেসবুক ফটোকার্ড প্রিভিউ (Live Canvas)
             </span>
           </div>
 
           {/* Interactive Card Canvas Component */}
           <div className="w-full flex justify-center overflow-x-auto py-2">
-            {appMode === 'photocard' ? (
-              <PhotoCardPreview ref={cardRef} data={cardData} />
-            ) : (
-              <YouTubeThumbnailPreview ref={ytCardRef} data={ytData} />
-            )}
+            <PhotoCardPreview ref={cardRef} data={cardData} />
           </div>
         </div>
       </main>
@@ -491,7 +379,6 @@ export default function App() {
         isOpen={isOfflineModalOpen}
         onClose={() => setIsOfflineModalOpen(false)}
         cardData={cardData}
-        ytData={ytData}
         appMode={appMode}
       />
     </div>

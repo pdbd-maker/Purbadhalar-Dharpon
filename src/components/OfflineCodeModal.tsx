@@ -7,8 +7,8 @@ interface OfflineCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   cardData: PhotoCardData;
-  ytData: YouTubeThumbnailData;
-  appMode: 'photocard' | 'youtube';
+  ytData?: YouTubeThumbnailData;
+  appMode?: 'photocard' | 'youtube';
 }
 
 export const OfflineCodeModal: React.FC<OfflineCodeModalProps> = ({
@@ -16,7 +16,7 @@ export const OfflineCodeModal: React.FC<OfflineCodeModalProps> = ({
   onClose,
   cardData,
   ytData,
-  appMode,
+  appMode = 'photocard',
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -25,7 +25,7 @@ export const OfflineCodeModal: React.FC<OfflineCodeModalProps> = ({
   const fullCode = generateOfflineHtml({
     cardData,
     ytData,
-    activeMode: appMode,
+    activeMode: 'photocard',
   });
 
   const handleCopy = () => {

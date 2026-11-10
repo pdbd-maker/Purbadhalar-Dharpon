@@ -85,7 +85,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
                     className="w-full h-full object-cover"
                     style={{
                       transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
-                      filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+                      filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%) saturate(${data.filterSaturate || 100}%)`,
                       transformOrigin: 'center center',
                     }}
                     onError={(e) => {
@@ -357,7 +357,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
                   }}
                   style={{
                     transform: `translate(${data.posX}px, ${data.posY}px) scale(${data.zoom}) rotate(${data.rotation}deg)`,
-                    filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%)`,
+                    filter: `brightness(${data.filterBrightness}%) contrast(${data.filterContrast}%) saturate(${data.filterSaturate || 100}%)`,
                     transformOrigin: 'center center',
                   }}
                 />
@@ -435,23 +435,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               )}
             </div>
 
-            {/* Category Badge in Top Header (Optional Toggle) */}
-            {data.showCategory !== false && (data.category || data.customCategory) && (
-              <div
-                id="out-category"
-                className="px-3 py-1 rounded-md text-xs font-bold shadow-md tracking-wide"
-                style={{
-                  backgroundColor: data.badgeBgColor || theme.defaultBadgeBg || '#dc2626',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                }}
-              >
-                {data.customCategory || data.category}
-              </div>
-            )}
-
-            {/* Date & Time Box */}
+            {/* Date Box (Day, English & Bengali Era) */}
             <div className="text-right leading-tight flex flex-col items-end" style={{ color: '#ffffff' }}>
               <div
                 id="out-day"
@@ -466,16 +450,6 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               <div id="out-bng" className="text-[11px]" style={{ opacity: 0.85 }}>
                 {data.customBngDate}
               </div>
-              {data.showTime && data.customTime && (
-                <div
-                  id="out-time"
-                  className="text-[10px] font-bold mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/10"
-                  style={{ color: '#fde047' }}
-                >
-                  <span>🕒</span>
-                  <span>{data.customTime}</span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -650,25 +624,6 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
                   <span className="inline-flex items-center justify-center leading-none">
                     {data.detailTag}
                   </span>
-                </div>
-              )}
-
-              {data.cardType !== 'opinion' && data.showReporter && data.reporterName && (
-                <div
-                  id="out-reporter-box"
-                  className="inline-flex items-center gap-1.5 px-3 rounded font-semibold text-xs shadow-md"
-                  style={{
-                    background: 'rgba(15, 23, 42, 0.85)',
-                    color: '#e2e8f0',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    height: '30px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    lineHeight: '1.2',
-                  }}
-                >
-                  <span style={{ color: theme.accentColor }}>✍️</span>
-                  <span id="out-reporter">{data.reporterName}</span>
                 </div>
               )}
             </div>

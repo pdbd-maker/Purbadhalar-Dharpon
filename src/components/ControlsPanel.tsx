@@ -13,6 +13,10 @@ import {
   RefreshCw,
   Tag,
   User,
+  Wand2,
+  Sun,
+  Eye,
+  Sliders,
 } from 'lucide-react';
 import { PhotoCardData, ThemeId, FontFamily } from '../types';
 import { THEMES, SAMPLE_NEWS_PRESETS } from '../data/themesAndPresets';
@@ -23,6 +27,7 @@ import {
   getFormattedBengaliEraDate,
   getFormattedBengaliTime,
 } from '../utils/dateUtils';
+import { analyzeImageLighting, enhanceImageMagicCanvas, EnhancementStats } from '../utils/imageEnhance';
 
 interface ControlsPanelProps {
   data: PhotoCardData;
@@ -82,6 +87,66 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   onResetTransforms,
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'datetime' | 'image' | 'design' | 'footer'>('content');
+  const [isEnhancing, setIsEnhancing] = useState<boolean>(false);
+  const [enhanceMessage, setEnhanceMessage] = useState<string>('');
+
+  const triggerMagicEnhance = async (imgUrl: string, notify = true) => {
+    if (!imgUrl) return;
+    setIsEnhancing(true);
+    if (notify) setEnhanceMessage('ম্যাজিক অ্যানালাইসিস ও লাইটিং অ্যাডজাস্ট হচ্ছে...');
+    try {
+      const stats = await analyzeImageLighting(imgUrl);
+      onChange({
+        filterBrightness: stats.suggestedBrightness,
+        filterContrast: stats.suggestedContrast,
+        filterSaturate: stats.suggestedSaturate,
+        autoEnhanced: true,
+      });
+      if (notify) {
+        setEnhanceMessage(`✨ ${stats.description} (উজ্জ্বলতা ${stats.suggestedBrightness}%, কন্ট্রাস্ট ${stats.suggestedContrast}%)`);
+        setTimeout(() => setEnhanceMessage(''), 5000);
+      }
+    } catch (err) {
+      console.error(err);
+      if (notify) setEnhanceMessage('অটো অ্যানালাইসিসে সমস্যা হয়েছে');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleDeepPixelEnhance = async () => {
+    if (!data.mainImgUrl) return;
+    setIsEnhancing(true);
+    setEnhanceMessage('পিক্সেল-লেভেল শার্পনেস ও লাইট ফিক্স হচ্ছে...');
+    try {
+      const enhancedDataUrl = await enhanceImageMagicCanvas(data.mainImgUrl);
+      onChange({
+        mainImgUrl: enhancedDataUrl,
+        filterBrightness: 100,
+        filterContrast: 100,
+        filterSaturate: 100,
+        autoEnhanced: true,
+      });
+      setEnhanceMessage('🎉 ছবি নিখুঁতভাবে ফিক্স ও এইচডি কোয়ালিটিতে রূপান্তরিত হয়েছে!');
+      setTimeout(() => setEnhanceMessage(''), 5000);
+    } catch (err) {
+      console.error(err);
+      setEnhanceMessage('পিক্সেল ফিক্সে সমস্যা হয়েছে');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleResetFilters = () => {
+    onChange({
+      filterBrightness: 100,
+      filterContrast: 100,
+      filterSaturate: 100,
+      autoEnhanced: false,
+    });
+    setEnhanceMessage('ফিল্টার ডিফল্ট মানে রিসেট করা হয়েছে');
+    setTimeout(() => setEnhanceMessage(''), 3000);
+  };
 
   const handleSyncLiveDateTime = () => {
     const now = new Date();
@@ -154,6 +219,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           posX: 0,
           rotation: 0,
         });
+        // Auto magic lighting & clarity enhancer on newly uploaded photo
+        triggerMagicEnhance(result, true);
       };
       reader.readAsDataURL(file);
     }
@@ -198,8 +265,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          <Clock className="w-3.5 h-3.5" />
-          <span>তারিখ-সময়</span>
+          <Calendar className="w-3.5 h-3.5" />
+          <span>তারিখ</span>
         </button>
 
         <button
@@ -352,94 +419,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
           </div>
 
-          {/* Category / Badge Selector (Optional Toggle) */}
-          <div className="flex flex-col gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-amber-400" />
-                <span>ক্যাটাগরি / ব্যাজ (ঐচ্ছিক):</span>
-              </label>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold cursor-pointer bg-slate-900 hover:bg-slate-850 px-2 py-0.5 rounded border border-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={data.showCategory !== false}
-                    onChange={(e) => onChange({ showCategory: e.target.checked })}
-                    className="accent-amber-500 rounded cursor-pointer w-3.5 h-3.5"
-                  />
-                  <span>{data.showCategory !== false ? 'অন (দেখাবেন)' : 'অফ (লুকানো)'}</span>
-                </label>
-                {data.showCategory !== false && (
-                  <input
-                    type="color"
-                    value={data.badgeBgColor || '#e50914'}
-                    onChange={(e) => onChange({ badgeBgColor: e.target.value })}
-                    title="ব্যাজের ব্যাকগ্রাউন্ড কালার"
-                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-                  />
-                )}
-              </div>
-            </div>
 
-            {data.showCategory !== false ? (
-              <>
-                <div className="grid grid-cols-3 gap-1 mt-1">
-                  {(data.cardType === 'opinion' ? OPINION_CATEGORY_OPTIONS : CATEGORY_OPTIONS.slice(0, 6)).map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => onChange({ category: cat, customCategory: '', showCategory: true })}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
-                        data.category === cat && !data.customCategory
-                          ? 'bg-red-600 text-white border-red-500 shadow'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                {data.cardType !== 'opinion' && (
-                  <div className="grid grid-cols-3 gap-1">
-                    {CATEGORY_OPTIONS.slice(6).map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => onChange({ category: cat, customCategory: '', showCategory: true })}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate border ${
-                          data.category === cat && !data.customCategory
-                            ? 'bg-red-600 text-white border-red-500 shadow'
-                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <input
-                  type="text"
-                  value={data.customCategory || ''}
-                  onChange={(e) => onChange({ customCategory: e.target.value, showCategory: true })}
-                  placeholder="অথবা কাস্টম ব্যাজ টেক্সট লিখুন..."
-                  className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
-                />
-              </>
-            ) : (
-              <div className="text-[11px] text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 italic flex items-center justify-between">
-                <span>ফটোকার্ডে ক্যাটাগরি ব্যাজ বর্তমানে বন্ধ রয়েছে।</span>
-                <button
-                  type="button"
-                  onClick={() => onChange({ showCategory: true })}
-                  className="text-[10px] font-bold text-amber-400 hover:underline cursor-pointer"
-                >
-                  চালু করুন
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* OPINION / COLUMNIST SPECIFIC INPUTS */}
           {data.cardType === 'opinion' ? (
@@ -701,50 +681,6 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 outline-none leading-relaxed resize-none transition-colors"
                 />
               </div>
-
-              {/* Reporter / Desk Selection */}
-              <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-amber-400" />
-                    <span>প্রতিবেদক / রিপোর্টার:</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={data.showReporter}
-                      onChange={(e) => onChange({ showReporter: e.target.checked })}
-                      className="accent-amber-500 rounded cursor-pointer"
-                    />
-                    <span>দেখাবেন</span>
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1 mt-1">
-                  {REPORTER_OPTIONS.map((rep) => (
-                    <button
-                      key={rep}
-                      type="button"
-                      onClick={() => onChange({ reporterName: rep, showReporter: true })}
-                      className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all truncate border ${
-                        data.reporterName === rep && data.showReporter
-                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      {rep}
-                    </button>
-                  ))}
-                </div>
-
-                <input
-                  type="text"
-                  value={data.reporterName || ''}
-                  onChange={(e) => onChange({ reporterName: e.target.value })}
-                  placeholder="অথবা প্রতিবেদকের নাম লিখুন..."
-                  className="mt-1 bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none"
-                />
-              </div>
             </>
           )}
 
@@ -815,8 +751,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </button>
           </div>
 
-          {/* Date & Time Picker Controls */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+          {/* Date Picker Controls */}
+          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-sky-400" />
@@ -829,35 +765,6 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 className="bg-slate-900 border border-slate-700 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2 outline-none cursor-pointer"
               />
             </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
-                <Clock className="w-3 h-3 text-amber-400" />
-                <span>সময় সিলেক্টর:</span>
-              </label>
-              <input
-                type="time"
-                value={data.selectedTimeStr || ''}
-                onChange={handleTimeChange}
-                className="bg-slate-900 border border-slate-700 focus:border-amber-500 text-slate-100 text-xs rounded-lg p-2 outline-none cursor-pointer"
-              />
-            </div>
-          </div>
-
-          {/* Time Display Toggle */}
-          <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-slate-200">
-                ফটোকার্ডে সময় প্রদর্শন করুন
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={data.showTime !== false}
-              onChange={(e) => onChange({ showTime: e.target.checked })}
-              className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
-            />
           </div>
 
           {/* Direct Manual Customization Box */}
@@ -898,17 +805,6 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none font-semibold text-amber-300"
               />
             </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] text-slate-400">সময় ফরম্যাট:</label>
-              <input
-                type="text"
-                value={data.customTime || ''}
-                onChange={(e) => onChange({ customTime: e.target.value })}
-                placeholder="সন্ধ্যা ০৭:২৭"
-                className="bg-slate-900 border border-slate-800 focus:border-amber-500 text-slate-200 text-xs rounded-lg p-2 outline-none font-semibold text-yellow-300"
-              />
-            </div>
           </div>
         </div>
       )}
@@ -935,7 +831,126 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </label>
           </div>
 
-          {/* Image Fit Mode Option */}
+          {/* MAGIC PHOTO ENHANCER & AUTO-LIGHTING FIX TOOL */}
+          <div className="bg-gradient-to-r from-amber-950/40 via-slate-950 to-emerald-950/40 p-3.5 rounded-xl border-2 border-amber-500/50 flex flex-col gap-3 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                  <Wand2 className="w-4 h-4 animate-pulse" />
+                </span>
+                <div>
+                  <h4 className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                    <span>ম্যাজিক ফটো ও লাইট ফিক্সার টুল</span>
+                    <span className="bg-amber-500 text-slate-950 text-[9px] px-1.5 py-0.2 rounded font-black tracking-wider">
+                      AUTO
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-slate-400">
+                    ছবি বিকৃত না করে আলো, কন্ট্রাস্ট ও স্পষ্টতা স্বয়ংক্রিয়ভাবে ঠিক করুন
+                  </p>
+                </div>
+              </div>
+
+              {data.autoEnhanced && (
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>ফিক্সড</span>
+                </span>
+              )}
+            </div>
+
+            {/* Quick Action Magic Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={isEnhancing || !data.mainImgUrl}
+                onClick={() => triggerMagicEnhance(data.mainImgUrl, true)}
+                className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-extrabold text-xs py-2.5 px-3 rounded-xl shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Sun className={`w-3.5 h-3.5 ${isEnhancing ? 'animate-spin' : ''}`} />
+                <span>⚡ ১-ক্লিক অটো আলো ফিক্স</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isEnhancing || !data.mainImgUrl}
+                onClick={handleDeepPixelEnhance}
+                className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>🪄 ফুল এইচডি পিক্সেল ম্যাজিক</span>
+              </button>
+            </div>
+
+            {/* Notification & Status Banner */}
+            {enhanceMessage && (
+              <div className="bg-slate-900/90 border border-amber-500/30 rounded-lg p-2 text-[11px] text-amber-300 font-medium flex items-center gap-1.5 animate-fadeIn">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>{enhanceMessage}</span>
+              </div>
+            )}
+
+            {/* Smart Lighting Adjust Quick Presets */}
+            <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-800">
+              <span className="text-[10px] text-slate-400 font-semibold">
+                ছবি অনুযায়ী ইনস্ট্যান্ট লাইটিং টোন:
+              </span>
+              <div className="grid grid-cols-4 gap-1 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      filterBrightness: 125,
+                      filterContrast: 114,
+                      filterSaturate: 115,
+                      autoEnhanced: true,
+                    })
+                  }
+                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 py-1.5 px-1 rounded-lg transition-colors text-center"
+                >
+                  🌑 ডার্ক ফিক্স
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      filterBrightness: 95,
+                      filterContrast: 120,
+                      filterSaturate: 112,
+                      autoEnhanced: true,
+                    })
+                  }
+                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 py-1.5 px-1 rounded-lg transition-colors text-center"
+                >
+                  ☀️ ওভার-লাইট
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      filterBrightness: 110,
+                      filterContrast: 115,
+                      filterSaturate: 125,
+                      autoEnhanced: true,
+                    })
+                  }
+                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 py-1.5 px-1 rounded-lg transition-colors text-center"
+                >
+                  🎨 প্রাণবন্ত কালার
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-white py-1.5 px-1 rounded-lg transition-colors text-center"
+                >
+                  🔄 সাধারণ
+                </button>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-col gap-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <label className="text-xs font-bold text-amber-400 flex items-center justify-between">
               <span>২. ছবি ডিসপ্লে মোড (অটো ক্রপ কাট রোধ):</span>
@@ -1058,8 +1073,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           </div>
 
           {/* Overlay Darkness & Image Filters */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-[11px] font-semibold text-slate-300">
                   ডার্ক মাস্ক তীব্রতা:
@@ -1081,7 +1096,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               />
             </div>
 
-            <div className="flex flex-col gap-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div className="flex flex-col gap-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-[11px] font-semibold text-slate-300">
                   উজ্জ্বলতা (Brightness):
@@ -1093,13 +1108,57 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               <input
                 type="range"
                 min="60"
-                max="140"
-                step="5"
+                max="150"
+                step="2"
                 value={data.filterBrightness}
                 onChange={(e) =>
                   onChange({ filterBrightness: parseInt(e.target.value, 10) })
                 }
                 className="accent-amber-500 cursor-pointer h-1.5 rounded-lg bg-slate-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[11px] font-semibold text-slate-300">
+                  কন্ট্রাস্ট (Contrast):
+                </span>
+                <span className="font-mono text-emerald-400 text-[11px]">
+                  {data.filterContrast}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="70"
+                max="150"
+                step="2"
+                value={data.filterContrast}
+                onChange={(e) =>
+                  onChange({ filterContrast: parseInt(e.target.value, 10) })
+                }
+                className="accent-emerald-500 cursor-pointer h-1.5 rounded-lg bg-slate-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[11px] font-semibold text-slate-300">
+                  কালার প্রাণবন্ততা (Saturate):
+                </span>
+                <span className="font-mono text-sky-400 text-[11px]">
+                  {data.filterSaturate || 100}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="70"
+                max="160"
+                step="2"
+                value={data.filterSaturate || 100}
+                onChange={(e) =>
+                  onChange({ filterSaturate: parseInt(e.target.value, 10) })
+                }
+                className="accent-sky-500 cursor-pointer h-1.5 rounded-lg bg-slate-800"
               />
             </div>
           </div>

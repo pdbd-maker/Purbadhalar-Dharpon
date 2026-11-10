@@ -15,10 +15,13 @@ import {
   Grid,
   Columns,
   Layers,
+  Wand2,
+  Sun,
 } from 'lucide-react';
 import { YouTubeThumbnailData, ThemeId, FontFamily } from '../types';
 import { THEMES } from '../data/themesAndPresets';
 import { YOUTUBE_PRESETS } from '../data/youtubePresets';
+import { analyzeImageLighting, enhanceImageMagicCanvas } from '../utils/imageEnhance';
 
 interface YouTubeControlsPanelProps {
   data: YouTubeThumbnailData;
@@ -35,6 +38,53 @@ export const YouTubeControlsPanel: React.FC<YouTubeControlsPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'image' | 'design'>('content');
   const [presetCategoryFilter, setPresetCategoryFilter] = useState<string>('সব');
+  const [isEnhancing, setIsEnhancing] = useState<boolean>(false);
+  const [enhanceMessage, setEnhanceMessage] = useState<string>('');
+
+  const triggerMagicEnhance = async (imgUrl: string, notify = true) => {
+    if (!imgUrl) return;
+    setIsEnhancing(true);
+    if (notify) setEnhanceMessage('থাম্বনেইল ছবির আলো ও কন্ট্রাস্ট অ্যাডজাস্ট হচ্ছে...');
+    try {
+      const stats = await analyzeImageLighting(imgUrl);
+      onChange({
+        filterBrightness: stats.suggestedBrightness,
+        filterContrast: stats.suggestedContrast,
+        filterSaturate: stats.suggestedSaturate,
+        autoEnhanced: true,
+      });
+      if (notify) {
+        setEnhanceMessage(`✨ ${stats.description}`);
+        setTimeout(() => setEnhanceMessage(''), 4500);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleDeepPixelEnhance = async () => {
+    if (!data.mainImgUrl) return;
+    setIsEnhancing(true);
+    setEnhanceMessage('পিক্সেল-লেভেল শার্পনেস ও লাইট ফিক্স হচ্ছে...');
+    try {
+      const enhancedDataUrl = await enhanceImageMagicCanvas(data.mainImgUrl);
+      onChange({
+        mainImgUrl: enhancedDataUrl,
+        filterBrightness: 100,
+        filterContrast: 100,
+        filterSaturate: 100,
+        autoEnhanced: true,
+      });
+      setEnhanceMessage('🎉 ছবি নিখুঁত এইচডি কোয়ালিটিতে ফিক্স হয়েছে!');
+      setTimeout(() => setEnhanceMessage(''), 4500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   const filteredPresets =
     presetCategoryFilter === 'সব'
@@ -71,6 +121,7 @@ export const YouTubeControlsPanel: React.FC<YouTubeControlsPanelProps> = ({
           posX: 0,
           rotation: 0,
         });
+        triggerMagicEnhance(result, true);
       };
       reader.readAsDataURL(file);
     }
@@ -553,6 +604,52 @@ export const YouTubeControlsPanel: React.FC<YouTubeControlsPanelProps> = ({
       {/* Tab 2: Image & Position Adjustment */}
       {activeTab === 'image' && (
         <div className="flex flex-col gap-3">
+          {/* MAGIC PHOTO LIGHTING & CLARITY ENHANCER */}
+          <div className="bg-gradient-to-r from-amber-950/40 via-slate-950 to-emerald-950/40 p-3 rounded-xl border border-amber-500/40 flex flex-col gap-2.5 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Wand2 className="w-4 h-4 text-amber-400 animate-pulse" />
+                <span className="text-xs font-bold text-amber-300">
+                  ম্যাজিক থাম্বনেইল লাইট ও কোয়ালিটি ফিক্সার
+                </span>
+              </div>
+              {data.autoEnhanced && (
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  অটো ফিক্সড
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={isEnhancing || !data.mainImgUrl}
+                onClick={() => triggerMagicEnhance(data.mainImgUrl, true)}
+                className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-extrabold text-xs py-2 px-3 rounded-lg shadow cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Sun className={`w-3.5 h-3.5 ${isEnhancing ? 'animate-spin' : ''}`} />
+                <span>⚡ ১-ক্লিক অটো আলো ফিক্স</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isEnhancing || !data.mainImgUrl}
+                onClick={handleDeepPixelEnhance}
+                className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-extrabold text-xs py-2 px-3 rounded-lg shadow cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>🪄 ফুল এইচডি পিক্সেল ফিক্স</span>
+              </button>
+            </div>
+
+            {enhanceMessage && (
+              <div className="bg-slate-900 border border-amber-500/30 rounded p-1.5 text-[11px] text-amber-300 font-medium flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>{enhanceMessage}</span>
+              </div>
+            )}
+          </div>
+
           {/* Multi Image Collage Section */}
           <div className="flex flex-col gap-2 bg-[#020617] p-3 rounded-xl border border-amber-500/30">
             <div className="flex items-center justify-between">

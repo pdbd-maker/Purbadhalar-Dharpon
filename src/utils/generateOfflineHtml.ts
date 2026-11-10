@@ -2,7 +2,7 @@ import { PhotoCardData, YouTubeThumbnailData } from '../types';
 
 export interface GenerateOfflineHtmlOptions {
   cardData: PhotoCardData;
-  ytData: YouTubeThumbnailData;
+  ytData?: YouTubeThumbnailData;
   activeMode?: 'photocard' | 'youtube';
 }
 
@@ -10,57 +10,20 @@ export function generateOfflineHtml(
   input: GenerateOfflineHtmlOptions | PhotoCardData
 ): string {
   let cardData: PhotoCardData;
-  let ytData: YouTubeThumbnailData;
-  let activeMode: 'photocard' | 'youtube' = 'photocard';
 
-  if ('cardData' in input && 'ytData' in input) {
+  if ('cardData' in input) {
     cardData = input.cardData;
-    ytData = input.ytData;
-    activeMode = input.activeMode || 'photocard';
   } else {
     cardData = input as PhotoCardData;
-    ytData = {
-      headline: cardData.headline || 'এখানে ভিডিওর আকর্ষণীয় বাংলা শিরোনাম লিখুন...',
-      subTitle: 'বিশেষ নিউজ বুলেটিন',
-      badgeText: '🔴 সরাসরি',
-      badgeBg: '#dc2626',
-      badgeTextColor: '#ffffff',
-      highlightWord: 'সরাসরি',
-      highlightBg: '#facc15',
-      mainImgUrl: cardData.mainImgUrl || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1280&q=80',
-      galleryImages: [],
-      collageStyle: 'auto',
-      zoom: cardData.zoom || 1,
-      posX: cardData.posX || 0,
-      posY: cardData.posY || 0,
-      rotation: 0,
-      themeId: cardData.themeId || 'royal_blue',
-      fontFamily: 'Hind Siliguri',
-      fontSize: 28,
-      lineHeight: 1.25,
-      overlayOpacity: 70,
-      showPlayIcon: true,
-      showLiveDot: true,
-      showChannelLogo: true,
-      logoUrl: cardData.logoUrl || '',
-      channelName: 'পূর্বধলার দর্পণ',
-      ytHandle: '@purbadhala',
-      layoutStyle: 'bottom_pill',
-      filterBrightness: 100,
-      filterContrast: 100,
-    };
   }
 
   const isPortrait = cardData.aspectRatio === '4:5';
   const cardHeight = isPortrait ? '675px' : '540px';
 
   const defaultCardImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="540" cy="540" r="300" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="32" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি নির্বাচন করুন</text></svg>';
-  
-  const defaultYtImg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="640" cy="360" r="250" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="28" font-family="sans-serif">পূর্বধলার দর্পণ - ব্যাকগ্রাউন্ড ছবি যোগ করুন</text></svg>';
 
   // Clean initial URLs to avoid broken local blob URLs when opened from file://
   const initialCardImg = (cardData.mainImgUrl && !cardData.mainImgUrl.startsWith('blob:')) ? cardData.mainImgUrl : defaultCardImg;
-  const initialYtImg = (ytData.mainImgUrl && !ytData.mainImgUrl.startsWith('blob:')) ? ytData.mainImgUrl : defaultYtImg;
   const initialLogoImg = (cardData.logoUrl && !cardData.logoUrl.startsWith('blob:')) ? cardData.logoUrl : '';
 
   return `<!DOCTYPE html>
@@ -68,7 +31,7 @@ export function generateOfflineHtml(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>পূর্বধলার দর্পণ - অফলাইন গ্রাফিক্স জেনারেটর (ফটোকার্ড ও থাম্বনেইল)</title>
+    <title>পূর্বধলার দর্পণ - অফলাইন ফটোকার্ড জেনারেটর</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -424,132 +387,31 @@ export function generateOfflineHtml(
 
         /* ---------------------------------- */
         /* 🎬 2. YouTube Thumbnail Style     */
-        /* ---------------------------------- */
-        #ytcard {
-            width: 640px;
-            height: 360px;
-            background-color: #020617;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border-radius: 6px;
-        }
-
-        .yt-mask-gradient {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(0deg, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.65) 45%, rgba(2,6,23,0.2) 100%);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .yt-top-bar {
-            position: absolute;
-            top: 12px; left: 16px; right: 16px;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .yt-badge-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(2, 6, 23, 0.85);
-            border: 1px solid rgba(30, 41, 59, 0.8);
-            padding: 6px 12px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-
-        .yt-content-area {
-            position: absolute;
-            bottom: 20px; left: 20px; right: 20px;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .yt-subtitle-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 800;
-            background: #f59e0b;
-            color: #020617;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            border: 1px solid rgba(251, 191, 36, 0.4);
-        }
-
-        .yt-headline-box {
-            font-weight: 900;
-            color: #ffffff;
-            line-height: 1.25;
-            word-break: break-word;
-            text-shadow: 0px 3px 6px rgba(0,0,0,1), 0px 6px 15px rgba(0,0,0,0.9);
-        }
-
-        .yt-highlight-pill {
-            display: inline-block;
-            padding: 2px 10px;
-            margin: 0 4px;
-            border-radius: 6px;
-            font-weight: 900;
-            color: #020617;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transform: rotate(-1deg);
-        }
-
-        .yt-watermark {
-            position: absolute;
-            bottom: 10px; right: 14px;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            opacity: 0.9;
-        }
     </style>
 </head>
 <body>
 
     <div class="header-title">
-        <h1>পূর্বধলার দর্পণ - অফলাইন গ্রাফিক্স জেনারেটর</h1>
-        <p>সামাজিক মাধ্যমের জন্য খবর ফটোকার্ড ও ইউটিউব ১৬:৯ থাম্বনেইল প্রস্তুত করুন</p>
-        
-        <div class="mode-tabs">
-            <button id="tab-btn-photocard" class="tab-btn ${activeMode === 'photocard' ? 'active' : ''}">
-                <i class="fas fa-newspaper"></i> ফেসবুক ফটোকার্ড জেনারেটর
-            </button>
-            <button id="tab-btn-youtube" class="tab-btn ${activeMode === 'youtube' ? 'active' : ''}">
-                <i class="fab fa-youtube"></i> ইউটিউব থাম্বনেইল (16:9 HD)
-            </button>
-        </div>
+        <h1>পূর্বধলার দর্পণ - অফলাইন ফটোকার্ড জেনারেটর</h1>
+        <p>প্রেস কোয়ালিটি ফেসবুক সংবাদ ও মতামত ফটোকার্ড তৈরি করুন</p>
     </div>
 
     <!-- ============================================== -->
     <!-- 📰 PHOTO CARD SECTION                          -->
     <!-- ============================================== -->
-    <div id="section-photocard" class="main-wrapper" style="${activeMode === 'photocard' ? 'display:flex;' : 'display:none;'}">
+    <div id="section-photocard" class="main-wrapper" style="display:flex;">
         <div class="controls">
             <div class="panel-title">
                 <span><i class="fas fa-sliders-h"></i> ফটোকার্ড কাস্টমাইজেশন</span>
                 <button class="btn-reset" id="btn-reset-card"><i class="fas fa-undo"></i> রিসেট</button>
             </div>
 
-            <!-- Quick Presets -->
+            <!-- Quick Presets (Exactly 2 Presets) -->
             <div class="preset-bar">
-                <div class="preset-title"><i class="fas fa-bolt"></i> দ্রুত টেমপ্লেট নির্বাচন করুন:</div>
-                <div class="preset-btns">
-                    <button class="preset-btn" data-card-preset="breaking">🔴 ব্রেকিং নিউজ</button>
-                    <button class="preset-btn" data-card-preset="special">⭐ বিশেষ সংবাদ</button>
-                    <button class="preset-btn" data-card-preset="sports">⚽ খেলাধুলা</button>
-                    <button class="preset-btn" data-card-preset="politics">🏛️ রাজনীতি</button>
+                <div class="preset-title"><i class="fas fa-bolt"></i> দ্রুত রেডিমেড টেমপ্লেট:</div>
+                <div class="preset-btns" style="grid-template-columns:1fr 1fr;">
+                    <button class="preset-btn" data-card-preset="general">📰 ১. সাধারণ সংবাদ</button>
+                    <button class="preset-btn" data-card-preset="opinion">✍️ ১.১ মতামত ও কলাম</button>
                 </div>
             </div>
 
@@ -592,6 +454,34 @@ export function generateOfflineHtml(
                 </div>
             </div>
 
+            <!-- 🪄 MAGIC PHOTO LIGHT & CLARITY FIXER TOOL -->
+            <div style="background:linear-gradient(135deg, rgba(245,158,11,0.15), rgba(16,185,129,0.15)); border:1.5px solid #f59e0b; border-radius:12px; padding:12px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; font-weight:800; color:#fbbf24; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-wand-magic-sparkles"></i> ম্যাজিক ফটো ও আলো ফিক্সার টুল
+                    </span>
+                    <span id="magic-card-badge" style="font-size:9px; background:#10b981; color:#020617; font-weight:900; padding:2px 6px; border-radius:10px;">AUTO FIX</span>
+                </div>
+                <p style="font-size:10px; color:#cbd5e1; margin-bottom:8px; line-height:1.4;">
+                    কোনো বিকৃতি ছাড়াই ছবির অন্ধকার আলো, কন্ট্রাস্ট ও স্পষ্টতা স্বয়ংক্রিয়ভাবে ঠিক করুন:
+                </p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+                    <button type="button" id="btn-card-magic-light" style="background:#f59e0b; color:#020617; font-weight:800; border:none; border-radius:8px; padding:8px 6px; font-size:11px; cursor:pointer;">
+                        <i class="fas fa-sun"></i> ১-ক্লিক আলো ফিক্স
+                    </button>
+                    <button type="button" id="btn-card-magic-hd" style="background:#10b981; color:#ffffff; font-weight:800; border:none; border-radius:8px; padding:8px 6px; font-size:11px; cursor:pointer;">
+                        <i class="fas fa-sparkles"></i> এইচডি পিক্সেল ফিক্স
+                    </button>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;">
+                    <button type="button" class="btn-filter-preset" data-b="125" data-c="115" data-s="115" style="background:#0f172a; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:4px 2px; font-size:9px; cursor:pointer; font-weight:bold;">🌑 ডার্ক ফিক্স</button>
+                    <button type="button" class="btn-filter-preset" data-b="95" data-c="118" data-s="110" style="background:#0f172a; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:4px 2px; font-size:9px; cursor:pointer; font-weight:bold;">☀️ ওভার-লাইট</button>
+                    <button type="button" class="btn-filter-preset" data-b="110" data-c="114" data-s="125" style="background:#0f172a; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:4px 2px; font-size:9px; cursor:pointer; font-weight:bold;">🎨 প্রাণবন্ত</button>
+                    <button type="button" class="btn-filter-preset" data-b="100" data-c="100" data-s="100" style="background:#0f172a; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:4px 2px; font-size:9px; cursor:pointer; font-weight:bold;">🔄 সাধারণ</button>
+                </div>
+                <div id="card-magic-status" style="display:none; margin-top:6px; font-size:10px; color:#fbbf24; background:rgba(15,23,42,0.8); padding:4px 8px; border-radius:4px;"></div>
+            </div>
+
             <div class="row-grid">
                 <div class="input-group">
                     <label>ছবি জুম (Zoom):</label>
@@ -625,41 +515,13 @@ export function generateOfflineHtml(
 
             <div class="row-grid">
                 <div class="input-group">
-                    <label>ক্যাটাগরি ব্যাজ:</label>
-                    <select id="card-category-select">
-                        <option value="পূর্বধলা" ${cardData.category === 'পূর্বধলা' ? 'selected' : ''}>পূর্বধলা</option>
-                        <option value="ব্রেকিং নিউজ" ${cardData.category === 'ব্রেকিং নিউজ' ? 'selected' : ''}>ব্রেকিং নিউজ</option>
-                        <option value="বিশেষ সংবাদ" ${cardData.category === 'বিশেষ সংবাদ' ? 'selected' : ''}>বিশেষ সংবাদ</option>
-                        <option value="রাজনীতি" ${cardData.category === 'রাজনীতি' ? 'selected' : ''}>রাজনীতি</option>
-                        <option value="খেলাধুলা" ${cardData.category === 'খেলাধুলা' ? 'selected' : ''}>খেলাধুলা</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>ব্যাজ ব্যাকগ্রাউন্ড:</label>
-                    <input type="color" id="card-badge-color" value="${cardData.badgeBgColor || '#e50914'}" style="height:38px; cursor:pointer;">
-                </div>
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
                     <label>তারিখ নির্বাচন:</label>
                     <input type="date" id="card-date-input" style="color-scheme: dark; cursor:pointer;">
                 </div>
                 <div class="input-group">
-                    <label>সময় নির্বাচন:</label>
-                    <input type="time" id="card-time-input" style="color-scheme: dark; cursor:pointer;">
-                </div>
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
                     <label>ফন্ট সাইজ:</label>
                     <input type="range" min="18" max="42" value="${cardData.fontSize || 26}" class="slider" id="cardFontSize">
                     <span id="cardFontDisplay" style="font-size:11px; color:#38bdf8; display:block; margin-top:2px;">${cardData.fontSize || 26}px</span>
-                </div>
-                <div class="input-group">
-                    <label>প্রতিবেদকের নাম:</label>
-                    <input type="text" id="card-reporter-input" value="${cardData.reporterName || 'পূর্বধলা প্রতিনিধি'}">
                 </div>
             </div>
 
@@ -698,12 +560,10 @@ export function generateOfflineHtml(
                         </div>
                         <div class="brand-text" id="brand-text" style="${initialLogoImg ? 'display:none;' : ''}">পূর্বধলার দর্পণ</div>
                     </div>
-                    <div class="category-badge" id="out-category">${cardData.category || 'পূর্বধলা'}</div>
                     <div class="date-box">
                         <div class="day-name" id="out-day">মঙ্গলবার</div>
                         <div id="out-eng" class="eng-date">০১ সেপ্টেম্বর ২০২৬</div>
                         <div id="out-bng" class="bng-date">১৭ ভাদ্র ১৪৩৩ বঙ্গাব্দ</div>
-                        <div id="out-time" style="font-size:10px; color:#fde047; font-weight:bold; margin-top:2px; display:inline-block; background:rgba(0,0,0,0.4); padding:1px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.15);">🕒 সন্ধ্যা ০৭:২৭</div>
                     </div>
                 </div>
 
@@ -714,171 +574,20 @@ export function generateOfflineHtml(
                     
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div class="detail-btn" id="out-tag">${cardData.detailTag || 'বিস্তারিত কমেন্টে'}</div>
-                        <div class="reporter-badge" id="out-reporter-box">
-                            <i class="fas fa-user-edit"></i>
-                            <span id="out-reporter">${cardData.reporterName || 'পূর্বধলা প্রতিনিধি'}</span>
-                        </div>
                     </div>
                 </div>
 
                 <div class="footer-bar" id="card-footer-bar">
                     <div class="footer-item"><i class="fab fa-facebook"></i> <span id="out-fb">${cardData.fbHandle || '@purbadhala'}</span></div>
-                    <div class="footer-item"><i class="fab fa-youtube"></i> <span id="out-yt">${cardData.ytHandle || '@purbadhala'}</span></div>
                     <div class="footer-item"><i class="fas fa-globe"></i> <span id="out-web">${cardData.websiteUrl || 'www.pdonline.com.bd'}</span></div>
                 </div>
             </div>
         </div>
     </div>
 
-
     <!-- ============================================== -->
-    <!-- 🎬 YOUTUBE THUMBNAIL SECTION                  -->
+    <!-- ⚙️ CLIENT JAVASCRIPT                           -->
     <!-- ============================================== -->
-    <div id="section-youtube" class="main-wrapper" style="${activeMode === 'youtube' ? 'display:flex;' : 'display:none;'}">
-        <div class="controls">
-            <div class="panel-title">
-                <span><i class="fab fa-youtube" style="color:#ef4444;"></i> ইউটিউব থাম্বনেইল কাস্টমাইজেশন</span>
-                <button class="btn-reset" id="btn-reset-yt"><i class="fas fa-undo"></i> রিসেট</button>
-            </div>
-
-            <!-- YouTube Presets -->
-            <div class="preset-bar">
-                <div class="preset-title"><i class="fas fa-bolt"></i> ইউটিউব থাম্বনেইল টেমপ্লেট:</div>
-                <div class="preset-btns">
-                    <button class="preset-btn" data-yt-preset="live">🔴 লাইভ বুলেটিন</button>
-                    <button class="preset-btn" data-yt-preset="talkshow">🎙️ বিশেষ টকশো</button>
-                    <button class="preset-btn" data-yt-preset="investigation">🔍 অনুসন্ধানী</button>
-                    <button class="preset-btn" data-yt-preset="sports">🏆 খেলাধুলার খবর</button>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>১. থাম্বনেইল ব্যাকগ্রাউন্ড ছবি আপলোড:</label>
-                <input type="file" id="input-yt-img" accept="image/*">
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
-                    <label>ছবি জুম (Zoom):</label>
-                    <input type="range" min="0.5" max="3" step="0.05" value="${ytData.zoom || 1}" class="slider slider-amber" id="ytZoom">
-                    <span id="ytZoomDisplay" style="font-size:11px; color:#f59e0b; display:block; margin-top:2px;">100%</span>
-                </div>
-                <div class="input-group">
-                    <label>উপরে-নিচে (PosY):</label>
-                    <input type="range" min="-200" max="200" value="${ytData.posY || 0}" class="slider slider-emerald" id="ytPosY">
-                    <span id="ytPosYDisplay" style="font-size:11px; color:#10b981; display:block; margin-top:2px;">0px</span>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>২. আকর্ষনীয় ভিডিও শিরোনাম:</label>
-                <textarea id="yt-title-input" rows="3">${ytData.headline || 'এখানে ইউটিউব ভিডিওর আকর্ষণীয় শিরোনাম লিখুন...'}</textarea>
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
-                    <label>৩. হাইলাইট শব্দ/বাক্যাংশ:</label>
-                    <input type="text" id="yt-highlight-input" value="${ytData.highlightWord || 'সরাসরি'}" placeholder="যেমন: সরাসরি">
-                </div>
-                <div class="input-group">
-                    <label>হাইলাইট রঙ:</label>
-                    <input type="color" id="yt-highlight-bg" value="${ytData.highlightBg || '#facc15'}" style="height:38px; cursor:pointer;">
-                </div>
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
-                    <label>৪. ব্যাজ টেক্সট (Category):</label>
-                    <input type="text" id="yt-badge-input" value="${ytData.badgeText || '🔴 সরাসরি'}">
-                </div>
-                <div class="input-group">
-                    <label>ব্যাজ ব্যাকগ্রাউন্ড:</label>
-                    <input type="color" id="yt-badge-bg" value="${ytData.badgeBg || '#dc2626'}" style="height:38px; cursor:pointer;">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>৫. সাবটাইটেল/বিষয়বস্তু পিল (ঐচ্ছিক):</label>
-                <input type="text" id="yt-subtitle-input" value="${ytData.subTitle || 'বিশেষ নিউজ বুলেটিন'}" placeholder="যেমন: বিশেষ টকশো">
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
-                    <label>ক্যানভাস সাইজ (Aspect Ratio):</label>
-                    <select id="yt-aspect-select" onchange="syncYt()">
-                        <option value="16:9" ${ytData.aspectRatio === '16:9' ? 'selected' : ''}>১৬:৯ (1280x720 HD)</option>
-                        <option value="9:16" ${ytData.aspectRatio === '9:16' ? 'selected' : ''}>৯:১৬ (1080x1920 Shorts/Reels/TikTok)</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>সোশ্যাল মিডিয়া প্ল্যাটফর্ম:</label>
-                    <select id="yt-platform-select" onchange="syncYt()">
-                        <option value="youtube" ${ytData.targetPlatform === 'youtube' ? 'selected' : ''}>🔴 ইউটিউব (YouTube)</option>
-                        <option value="facebook" ${ytData.targetPlatform === 'facebook' ? 'selected' : ''}>🔵 ফেসবুক (Facebook)</option>
-                        <option value="tiktok" ${ytData.targetPlatform === 'tiktok' ? 'selected' : ''}>🎵 টিকটক (TikTok)</option>
-                        <option value="all" ${ytData.targetPlatform === 'all' ? 'selected' : ''}>🌐 সবগুলো (Social)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row-grid">
-                <div class="input-group">
-                    <label>চ্যানেল হ্যাশট্যাগ/ইউজারনেম:</label>
-                    <input type="text" id="yt-handle-input" value="${ytData.ytHandle || 'YouTube / @purbadhala'}">
-                </div>
-                <div class="input-group">
-                    <label>ফন্ট সাইজ:</label>
-                    <input type="range" min="18" max="42" value="${ytData.fontSize || 28}" class="slider" id="ytFontSize">
-                    <span id="ytFontDisplay" style="font-size:11px; color:#38bdf8; display:block; margin-top:2px;">${ytData.fontSize || 28}px</span>
-                </div>
-            </div>
-
-            <button class="btn-download" id="btn-download-yt"><i class="fas fa-download"></i> থাম্বনেইল ডাউনলোড (PNG)</button>
-        </div>
-
-        <div class="preview-container">
-            <div id="ytcard">
-                <div class="main-img-container">
-                    <img id="yt-fg-img" class="main-img" src="${initialYtImg}">
-                </div>
-
-                <div class="yt-mask-gradient"></div>
-
-                <div class="yt-top-bar">
-                    <div class="yt-badge-logo">
-                        <div style="width:22px; height:22px; border-radius:4px; background:linear-gradient(135deg, #dc2626, #f59e0b); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:11px;">দ</div>
-                        <span style="font-weight:800; font-size:13px; color:#ffffff;" id="yt-channel-name">${ytData.channelName || 'পূর্বধলার দর্পণ'}</span>
-                        <span style="font-size:9px; font-weight:800; color:#facc15; background:rgba(245,158,11,0.2); padding:1px 5px; border-radius:3px; border:1px solid rgba(245,158,11,0.3);">HD</span>
-                    </div>
-
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div id="yt-live-dot" style="display:flex; align-items:center; gap:6px; background:#dc2626; color:#fff; font-weight:800; font-size:11px; padding:4px 10px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.4);">
-                            <span style="width:8px; height:8px; border-radius:50%; background:#fff;"></span>
-                            <span>LIVE</span>
-                        </div>
-                        <div id="yt-badge-display" style="background:${ytData.badgeBg || '#dc2626'}; color:${ytData.badgeTextColor || '#ffffff'}; padding:4px 12px; border-radius:6px; font-weight:800; font-size:11px; text-transform:uppercase; box-shadow:0 2px 8px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2);">
-                            ${ytData.badgeText || '🔴 সরাসরি'}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="yt-content-area">
-                    <div id="yt-subtitle-pill" class="yt-subtitle-pill" style="${ytData.subTitle ? 'display:inline-flex;' : 'display:none;'}">
-                        <span id="yt-subtitle-text">${ytData.subTitle || 'বিশেষ নিউজ বুলেটিন'}</span>
-                    </div>
-
-                    <div id="yt-headline-display" class="yt-headline-box" style="font-size:${ytData.fontSize || 28}px;">
-                        ${ytData.headline || ''}
-                    </div>
-                </div>
-
-                <div class="yt-watermark">
-                    <div id="yt-platform-icon" style="min-width:24px; height:18px; padding:0 6px; background:#dc2626; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; font-weight:bold;">▶</div>
-                    <span style="font-weight:800; font-size:12px; color:#ffffff; text-shadow:0 2px 4px rgba(0,0,0,0.8);" id="yt-handle-display">${ytData.ytHandle || 'YouTube / @purbadhala'}</span>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ============================================== -->
     <!-- ⚙️ CLIENT JAVASCRIPT                           -->
@@ -893,12 +602,6 @@ export function generateOfflineHtml(
         });
 
         function initApp() {
-            // Mode switching
-            var tabPhotocard = document.getElementById('tab-btn-photocard');
-            var tabYoutube = document.getElementById('tab-btn-youtube');
-            if (tabPhotocard) tabPhotocard.addEventListener('click', function() { switchMode('photocard'); });
-            if (tabYoutube) tabYoutube.addEventListener('click', function() { switchMode('youtube'); });
-
             // Date setup
             updateDate();
 
@@ -916,19 +619,28 @@ export function generateOfflineHtml(
 
             bindEvent('card-title-input', 'input', syncCard);
             bindEvent('card-date-input', 'change', syncCard);
-            bindEvent('card-time-input', 'change', syncCard);
-            bindEvent('card-category-select', 'change', syncCard);
-            bindEvent('card-badge-color', 'input', syncCard);
-            bindEvent('card-badge-color', 'change', syncCard);
             bindEvent('cardFontSize', 'input', syncCard);
-            bindEvent('card-reporter-input', 'input', syncCard);
             bindEvent('card-tag-input', 'change', syncCard);
             bindEvent('card-web-input', 'input', syncCard);
 
             bindEvent('btn-reset-card', 'click', resetCardTransforms);
             bindEvent('btn-download-card', 'click', downloadPhotoCard);
 
-            // Photocard preset buttons
+            // Magic light & clarity buttons
+            bindEvent('btn-card-magic-light', 'click', analyzeAndFixCardLighting);
+            bindEvent('btn-card-magic-hd', 'click', enhanceCardPixelLevel);
+
+            var filterPresetBtns = document.querySelectorAll('.btn-filter-preset');
+            for (var fp = 0; fp < filterPresetBtns.length; fp++) {
+                filterPresetBtns[fp].addEventListener('click', function() {
+                    var b = parseInt(this.getAttribute('data-b'), 10) || 100;
+                    var c = parseInt(this.getAttribute('data-c'), 10) || 100;
+                    var s = parseInt(this.getAttribute('data-s'), 10) || 100;
+                    applyCardImageFilters(b, c, s);
+                });
+            }
+
+            // Photocard preset buttons (General and Opinion)
             var cardPresets = document.querySelectorAll('[data-card-preset]');
             for (var i = 0; i < cardPresets.length; i++) {
                 cardPresets[i].addEventListener('click', function() {
@@ -936,34 +648,8 @@ export function generateOfflineHtml(
                 });
             }
 
-            // YouTube inputs binding
-            bindEvent('input-yt-img', 'change', loadYtImg);
-            bindEvent('ytZoom', 'input', updateYtImgTransform);
-            bindEvent('ytPosY', 'input', updateYtImgTransform);
-
-            bindEvent('yt-title-input', 'input', syncYt);
-            bindEvent('yt-highlight-input', 'input', syncYt);
-            bindEvent('yt-highlight-bg', 'input', syncYt);
-            bindEvent('yt-badge-input', 'input', syncYt);
-            bindEvent('yt-badge-bg', 'input', syncYt);
-            bindEvent('yt-subtitle-input', 'input', syncYt);
-            bindEvent('ytFontSize', 'input', syncYt);
-            bindEvent('yt-handle-input', 'input', syncYt);
-
-            bindEvent('btn-reset-yt', 'click', resetYtTransforms);
-            bindEvent('btn-download-yt', 'click', downloadYouTubeThumbnail);
-
-            // YouTube preset buttons
-            var ytPresets = document.querySelectorAll('[data-yt-preset]');
-            for (var j = 0; j < ytPresets.length; j++) {
-                ytPresets[j].addEventListener('click', function() {
-                    applyYtPreset(this.getAttribute('data-yt-preset'));
-                });
-            }
-
             // Initial sync
             syncCard();
-            syncYt();
             checkSavedLogo();
         }
 
@@ -972,19 +658,6 @@ export function generateOfflineHtml(
             if (el) {
                 el.addEventListener(evt, fn);
             }
-        }
-
-        function switchMode(mode) {
-            var pSec = document.getElementById('section-photocard');
-            var ySec = document.getElementById('section-youtube');
-            var pBtn = document.getElementById('tab-btn-photocard');
-            var yBtn = document.getElementById('tab-btn-youtube');
-
-            if (pSec) pSec.style.display = (mode === 'photocard') ? 'flex' : 'none';
-            if (ySec) ySec.style.display = (mode === 'youtube') ? 'flex' : 'none';
-
-            if (pBtn) pBtn.className = 'tab-btn ' + (mode === 'photocard' ? 'active' : '');
-            if (yBtn) yBtn.className = 'tab-btn ' + (mode === 'youtube' ? 'active' : '');
         }
 
         /* Bengali Calendar Converter (Bangla Academy Revised Standard 2019) */
@@ -1231,30 +904,14 @@ export function generateOfflineHtml(
 
         function applyCardPreset(presetType) {
             var titleInp = document.getElementById('card-title-input');
-            var catSel = document.getElementById('card-category-select');
             var themeSel = document.getElementById('card-theme');
-            var badgeCol = document.getElementById('card-badge-color');
 
-            if (presetType === 'breaking') {
-                if (titleInp) titleInp.value = 'জরুরি জরুরি! পূর্বধলায় রাতারাতি বড় ধরনের উন্নয়ন প্রকল্প অনুমোদন';
-                if (catSel) catSel.value = 'ব্রেকিং নিউজ';
-                if (themeSel) { themeSel.value = 'breaking_red'; changeCardTheme('breaking_red'); }
-                if (badgeCol) badgeCol.value = '#dc2626';
-            } else if (presetType === 'special') {
-                if (titleInp) titleInp.value = 'পূর্বধলার ঐতিহ্যবাহী লোকজ মেলায় হাজারো দর্শনার্থীর ঢল';
-                if (catSel) catSel.value = 'বিশেষ সংবাদ';
+            if (presetType === 'general') {
+                if (titleInp) titleInp.value = 'পূর্বধলায় নতুন আধুনিক মডেল মসজিদ ও ইসলামিক সাংস্কৃতিক কেন্দ্র উদ্বোধন';
                 if (themeSel) { themeSel.value = 'royal_blue'; changeCardTheme('royal_blue'); }
-                if (badgeCol) badgeCol.value = '#e50914';
-            } else if (presetType === 'sports') {
-                if (titleInp) titleInp.value = 'পূর্বধলা মিনি স্টেডিয়ামে জমজমাট ফুটবল ফাইনাল অনুষ্ঠিত';
-                if (catSel) catSel.value = 'খেলাধুলা';
-                if (themeSel) { themeSel.value = 'emerald_green'; changeCardTheme('emerald_green'); }
-                if (badgeCol) badgeCol.value = '#059669';
-            } else if (presetType === 'politics') {
-                if (titleInp) titleInp.value = 'জনসাধারণের পাশে থাকার প্রতিশ্রুতি ব্যক্ত করলেন উপজেলা স্থানীয় নেতৃবৃন্দ';
-                if (catSel) catSel.value = 'রাজনীতি';
+            } else if (presetType === 'opinion') {
+                if (titleInp) titleInp.value = 'পূর্বধলার ইতিহাস, ঐতিহ্য ও আগামীর সম্ভাবনাময় উন্নয়ন চিত্র';
                 if (themeSel) { themeSel.value = 'dark_navy'; changeCardTheme('dark_navy'); }
-                if (badgeCol) badgeCol.value = '#0284c7';
             }
             syncCard();
         }
@@ -1292,6 +949,139 @@ export function generateOfflineHtml(
             reader.readAsDataURL(e.target.files[0]);
         }
         
+        var currentCardBrightness = 100;
+        var currentCardContrast = 100;
+        var currentCardSaturate = 100;
+
+        function applyCardImageFilters(b, c, s, statusText) {
+            currentCardBrightness = b;
+            currentCardContrast = c;
+            currentCardSaturate = s;
+
+            var img = document.getElementById('card-fg-img');
+            var blurBg = document.getElementById('card-blur-bg');
+            var filterStr = 'brightness(' + b + '%) contrast(' + c + '%) saturate(' + s + '%)';
+
+            if (img) img.style.filter = filterStr;
+            if (blurBg) blurBg.style.filter = 'brightness(' + Math.round(b * 0.9) + '%) contrast(' + c + '%) blur(16px)';
+
+            var statusEl = document.getElementById('card-magic-status');
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> ' + (statusText || ('উজ্জ্বলতা ' + b + '%, কন্ট্রাস্ট ' + c + '%'));
+                setTimeout(function() { statusEl.style.display = 'none'; }, 5000);
+            }
+        }
+
+        function analyzeAndFixCardLighting() {
+            var img = document.getElementById('card-fg-img');
+            if (!img || !img.src) return;
+
+            var tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = function() {
+                try {
+                    var canvas = document.createElement('canvas');
+                    var sz = 100;
+                    canvas.width = sz;
+                    canvas.height = sz;
+                    var ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+                    ctx.drawImage(tempImg, 0, 0, sz, sz);
+                    var imgData = ctx.getImageData(0, 0, sz, sz);
+                    var data = imgData.data;
+
+                    var totalLum = 0;
+                    var darkCount = 0;
+                    var brightCount = 0;
+                    var totalPixels = data.length / 4;
+
+                    for (var i = 0; i < data.length; i += 4) {
+                        var lum = 0.2126 * data[i] + 0.7152 * data[i+1] + 0.0722 * data[i+2];
+                        totalLum += lum;
+                        if (lum < 60) darkCount++;
+                        if (lum > 200) brightCount++;
+                    }
+
+                    var avgLum = totalLum / totalPixels;
+                    var b = 106, c = 112, s = 114;
+                    var msg = 'ক্রিস্প এইচডি ও ব্যালেন্সড লাইটিং সেট করা হয়েছে';
+
+                    if (avgLum < 90 || (darkCount / totalPixels) > 0.45) {
+                        b = Math.min(135, Math.round(100 + (100 - avgLum) * 0.45));
+                        c = 114;
+                        s = 115;
+                        msg = 'অন্ধকার ছবি উজ্জ্বল ও পরিষ্কার করা হয়েছে';
+                    } else if (avgLum > 175 || (brightCount / totalPixels) > 0.4) {
+                        b = Math.max(92, Math.round(100 - (avgLum - 160) * 0.3));
+                        c = 118;
+                        s = 110;
+                        msg = 'অতিরিক্ত আলো কমিয়ে ডেপথ ও টেক্সচার বাড়ানো হয়েছে';
+                    }
+
+                    applyCardImageFilters(b, c, s, '✨ ' + msg);
+                } catch(e) {
+                    applyCardImageFilters(112, 112, 114, '✨ ম্যাজিক আলো ফিক্স কার্যকর হয়েছে');
+                }
+            };
+            tempImg.src = img.src;
+        }
+
+        function enhanceCardPixelLevel() {
+            var img = document.getElementById('card-fg-img');
+            if (!img || !img.src) return;
+
+            var statusEl = document.getElementById('card-magic-status');
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.innerText = 'পিক্সেল-লেভেল লাইট ও শার্পনেস প্রসেসিং হচ্ছে...';
+            }
+
+            var tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = function() {
+                try {
+                    var canvas = document.createElement('canvas');
+                    var maxDim = 1600;
+                    var w = tempImg.naturalWidth || tempImg.width;
+                    var h = tempImg.naturalHeight || tempImg.height;
+
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+
+                    canvas.width = w;
+                    canvas.height = h;
+                    var ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+                    ctx.drawImage(tempImg, 0, 0, w, h);
+
+                    var imgData = ctx.getImageData(0, 0, w, h);
+                    var d = imgData.data;
+
+                    for (var i = 0; i < d.length; i += 4) {
+                        // S-curve and subtle contrast + saturation boost
+                        var r = d[i], g = d[i+1], b = d[i+2];
+                        var gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                        d[i] = Math.min(255, Math.max(0, Math.round(gray + 1.12 * (r - gray))));
+                        d[i+1] = Math.min(255, Math.max(0, Math.round(gray + 1.12 * (g - gray))));
+                        d[i+2] = Math.min(255, Math.max(0, Math.round(gray + 1.12 * (b - gray))));
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                    var newUrl = canvas.toDataURL('image/jpeg', 0.94);
+                    img.src = newUrl;
+                    var blurBg = document.getElementById('card-blur-bg');
+                    if (blurBg) blurBg.src = newUrl;
+                    applyCardImageFilters(100, 100, 100, '🎉 নিখুঁত এইচডি পিক্সেলে রূপান্তরিত হয়েছে!');
+                } catch(err) {
+                    analyzeAndFixCardLighting();
+                }
+            };
+            tempImg.src = img.src;
+        }
+
         function loadCardImg(e) { 
             if (!e.target || !e.target.files || !e.target.files[0]) return;
             var reader = new FileReader();
@@ -1301,6 +1091,8 @@ export function generateOfflineHtml(
                 if (img) img.src = reader.result; 
                 if (blurBg) blurBg.src = reader.result;
                 resetCardTransforms();
+                // Auto trigger magic lighting fix when photo is uploaded
+                setTimeout(analyzeAndFixCardLighting, 100);
             };
             reader.readAsDataURL(e.target.files[0]);
         }
@@ -1328,204 +1120,6 @@ export function generateOfflineHtml(
                 alert('html2canvas লাইব্রেরি লোড হয়নি।');
             }
         }
-
-        /* 🎬 YouTube Thumbnail Sync */
-        function syncYt() {
-            var titleInp = document.getElementById('yt-title-input');
-            var headlineText = titleInp ? titleInp.value : '';
-
-            var hlInp = document.getElementById('yt-highlight-input');
-            var highlightWord = hlInp ? hlInp.value.trim() : '';
-
-            var hlBgInp = document.getElementById('yt-highlight-bg');
-            var highlightBg = hlBgInp ? hlBgInp.value : '#facc15';
-
-            var badgeInp = document.getElementById('yt-badge-input');
-            var badgeText = badgeInp ? badgeInp.value : '';
-
-            var badgeBgInp = document.getElementById('yt-badge-bg');
-            var badgeBg = badgeBgInp ? badgeBgInp.value : '#dc2626';
-
-            var subInp = document.getElementById('yt-subtitle-input');
-            var subtitleText = subInp ? subInp.value : '';
-
-            var fontInp = document.getElementById('ytFontSize');
-            var fontDisp = document.getElementById('ytFontDisplay');
-
-            var handleInp = document.getElementById('yt-handle-input');
-            var handleText = handleInp ? handleInp.value : '';
-
-            var headlineContainer = document.getElementById('yt-headline-display');
-            if (headlineContainer) {
-                if (fontInp) {
-                    headlineContainer.style.fontSize = fontInp.value + 'px';
-                    if (fontDisp) fontDisp.innerText = fontInp.value + 'px';
-                }
-
-                if (!highlightWord) {
-                    headlineContainer.innerText = headlineText;
-                } else {
-                    var terms = highlightWord.split(/[,|\n]+/).map(function(s) { return s.trim(); }).filter(Boolean);
-                    if (terms.length === 0) {
-                        headlineContainer.innerText = headlineText;
-                    } else {
-                        var html = headlineText;
-                        for (var t = 0; t < terms.length; t++) {
-                            var term = terms[t];
-                            if (term) {
-                                var pill = '<span class="yt-highlight-pill" style="background-color: ' + highlightBg + '; color: #020617;">' + term + '</span>';
-                                html = html.split(term).join(pill);
-                            }
-                        }
-                        headlineContainer.innerHTML = html;
-                    }
-                }
-            }
-
-            var badgeDisplay = document.getElementById('yt-badge-display');
-            if (badgeDisplay) {
-                badgeDisplay.innerText = badgeText;
-                badgeDisplay.style.backgroundColor = badgeBg;
-            }
-
-            var subPill = document.getElementById('yt-subtitle-pill');
-            var subSpan = document.getElementById('yt-subtitle-text');
-            if (subPill && subSpan) {
-                if (subtitleText.trim()) {
-                    subSpan.innerText = subtitleText;
-                    subPill.style.display = 'inline-flex';
-                } else {
-                    subPill.style.display = 'none';
-                }
-            }
-
-            var handleDisplay = document.getElementById('yt-handle-display');
-            if (handleDisplay) {
-                handleDisplay.innerText = handleText;
-            }
-
-            var aspectSel = document.getElementById('yt-aspect-select');
-            var aspectVal = aspectSel ? aspectSel.value : '16:9';
-            var ytCard = document.getElementById('ytcard');
-            if (ytCard) {
-                if (aspectVal === '9:16') {
-                    ytCard.style.width = '360px';
-                    ytCard.style.height = '640px';
-                } else {
-                    ytCard.style.width = '640px';
-                    ytCard.style.height = '360px';
-                }
-            }
-
-            var platformSel = document.getElementById('yt-platform-select');
-            var platformVal = platformSel ? platformSel.value : 'youtube';
-            var platformIcon = document.getElementById('yt-platform-icon');
-            if (platformIcon) {
-                if (platformVal === 'facebook') {
-                    platformIcon.style.background = '#1877f2';
-                    platformIcon.innerHTML = '<i class="fab fa-facebook-f"></i>';
-                } else if (platformVal === 'tiktok') {
-                    platformIcon.style.background = '#0f172a';
-                    platformIcon.style.border = '1px solid #fe2c55';
-                    platformIcon.innerHTML = '<i class="fab fa-tiktok" style="color:#25f4ee;"></i>';
-                } else if (platformVal === 'all') {
-                    platformIcon.style.background = 'linear-gradient(135deg, #1877f2, #dc2626, #fe2c55)';
-                    platformIcon.style.border = 'none';
-                    platformIcon.innerHTML = '<i class="fab fa-youtube"></i> <i class="fab fa-facebook-f"></i> <i class="fab fa-tiktok"></i>';
-                } else {
-                    platformIcon.style.background = '#dc2626';
-                    platformIcon.style.border = 'none';
-                    platformIcon.innerHTML = '▶';
-                }
-            }
-        }
-
-        function updateYtImgTransform() {
-            var zoomEl = document.getElementById('ytZoom');
-            var posEl = document.getElementById('ytPosY');
-            var zoomVal = zoomEl ? zoomEl.value : 1;
-            var posVal = posEl ? posEl.value : 0;
-            var img = document.getElementById('yt-fg-img');
-            if (img) {
-                img.style.transform = 'translateY(' + posVal + 'px) scale(' + zoomVal + ')';
-            }
-            var zoomDisp = document.getElementById('ytZoomDisplay');
-            if (zoomDisp) zoomDisp.innerText = Math.round(zoomVal * 100) + '%';
-            var posDisp = document.getElementById('ytPosYDisplay');
-            if (posDisp) posDisp.innerText = posVal + 'px';
-        }
-
-        function resetYtTransforms() {
-            var z = document.getElementById('ytZoom'); if (z) z.value = 1;
-            var py = document.getElementById('ytPosY'); if (py) py.value = 0;
-            updateYtImgTransform();
-        }
-
-        function applyYtPreset(presetType) {
-            var titleInp = document.getElementById('yt-title-input');
-            var hlInp = document.getElementById('yt-highlight-input');
-            var badgeInp = document.getElementById('yt-badge-input');
-            var subInp = document.getElementById('yt-subtitle-input');
-
-            if (presetType === 'live') {
-                if (titleInp) titleInp.value = 'পূর্বধলায় ভয়াবহ ঝড় ও নদীভাঙন পরিস্থিতি সরাসরি দেখুন';
-                if (hlInp) hlInp.value = 'সরাসরি দেখুন';
-                if (badgeInp) badgeInp.value = '🔴 সরাসরি';
-                if (subInp) subInp.value = 'বিশেষ বুলেটিন';
-            } else if (presetType === 'talkshow') {
-                if (titleInp) titleInp.value = 'উপজেলা নির্বাচনের সর্বশেষ সমীকরণ ও নিরপেক্ষ মতামত';
-                if (hlInp) hlInp.value = 'সর্বশেষ সমীকরণ';
-                if (badgeInp) badgeInp.value = '🎙️ বিশেষ টকশো';
-                if (subInp) subInp.value = 'সোজা কথা';
-            } else if (presetType === 'investigation') {
-                if (titleInp) titleInp.value = 'কী ঘটছে পূর্বধলায়? চাঞ্চল্যকর তথ্যের বিশেষ বিশেষ সাক্ষাৎকার';
-                if (hlInp) hlInp.value = 'বিশেষ সাক্ষাৎকার';
-                if (badgeInp) badgeInp.value = '🔍 অনুসদ্ধানী প্রতিবেদন';
-                if (subInp) subInp.value = 'বিশেষ নজর';
-            } else if (presetType === 'sports') {
-                if (titleInp) titleInp.value = 'ঐতিহাসিক টুর্নামেন্টে চ্যাম্পিয়ন হলো পূর্বধলা একাদশ';
-                if (hlInp) hlInp.value = 'চ্যাম্পিয়ন';
-                if (badgeInp) badgeInp.value = '🏆 খেলাধুলার খবর';
-                if (subInp) subInp.value = 'ফাইনাল ম্যাচ';
-            }
-            syncYt();
-        }
-
-        function loadYtImg(e) {
-            if (!e.target || !e.target.files || !e.target.files[0]) return;
-            var reader = new FileReader();
-            reader.onload = function() {
-                var img = document.getElementById('yt-fg-img');
-                if (img) img.src = reader.result;
-                resetYtTransforms();
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
-
-        function downloadYouTubeThumbnail() {
-            var card = document.getElementById('ytcard');
-            if (!card) return;
-
-            var h2c = (typeof html2canvasPro !== 'undefined') ? html2canvasPro : ((typeof html2canvas !== 'undefined') ? html2canvas : null);
-
-            if (h2c) {
-                h2c(card, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    width: card.offsetWidth,
-                    height: card.offsetHeight
-                }).then(function(canvas) {
-                    saveCanvasImage(canvas, 'Purbadhala_YT_Thumbnail_');
-                }).catch(function(err) {
-                    console.error('Download error:', err);
-                    alert('ছবি ডাউনলোড করতে সমস্যা হয়েছে।');
-                });
-            } else {
-                alert('html2canvas লাইব্রেরি লোড হয়নি।');
-            }
-        }
-
         function saveCanvasImage(canvas, prefix) {
             var link = document.createElement('a');
             link.download = prefix + Date.now() + '.png';
