@@ -173,133 +173,101 @@ export default function App() {
     if (!targetRef) return;
     setIsDownloading(true);
 
+    let container: HTMLDivElement | null = null;
     try {
-      // Wait for web fonts (Hind Siliguri, Anek Bangla, SolaimanLipi) to finish loading
+      // 1. Wait for web fonts (Hind Siliguri, Anek Bangla, SolaimanLipi) to finish loading
       if (document.fonts && document.fonts.ready) {
         await document.fonts.ready;
       }
+
+      const isPortrait = cardData.aspectRatio === '4:5';
+      const isLandscape = cardData.aspectRatio === '16:9';
+      const targetWidth = isLandscape ? 640 : 540;
+      const targetHeight = isLandscape ? 360 : (isPortrait ? 675 : 540);
 
       const currentMainImg = cardData.mainImgUrl;
       const currentLogo = cardData.logoUrl;
       const currentAuthorImg = cardData.authorImgUrl || '';
 
-      // Pre-convert image sources to Base64 Data URLs
+      // 2. Pre-convert image sources to Base64 Data URLs so canvas is never tainted
       const [dataMainImg, dataLogo, dataAuthorImg] = await Promise.all([
         getImageDataUrl(currentMainImg),
         getImageDataUrl(currentLogo),
         currentAuthorImg ? getImageDataUrl(currentAuthorImg) : Promise.resolve(''),
       ]);
 
-      const element = targetRef;
-      const isPortrait = cardData.aspectRatio === '4:5';
-      const isLandscape = cardData.aspectRatio === '16:9';
-      const targetWidth = isLandscape ? 640 : 540;
-      const targetHeight = isLandscape ? 360 : (isPortrait ? 675 : 540);
+      // 3. Create an isolated off-screen container with fixed target dimensions
+      // This completely decouples rendering from user device viewport, mobile screen scaling, and responsive grid layout
+      container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-99999px';
+      container.style.top = '0';
+      container.style.width = `${targetWidth}px`;
+      container.style.height = `${targetHeight}px`;
+      container.style.overflow = 'hidden';
+      container.style.zIndex = '-99999';
 
-      const canvas = await html2canvas(element, {
-        scale: 2, // 2x HD DPI resolution (1080x1080, 1080x1350, 1280x720)
+      const clone = targetRef.cloneNode(true) as HTMLElement;
+      clone.style.transform = 'none';
+      clone.style.margin = '0';
+      clone.style.position = 'absolute';
+      clone.style.left = '0';
+      clone.style.top = '0';
+      clone.style.width = `${targetWidth}px`;
+      clone.style.height = `${targetHeight}px`;
+
+      // 4. Update image sources in the clone directly
+      const clonedMainImg = clone.querySelector('#fg-main') as HTMLImageElement | null;
+      if (clonedMainImg && dataMainImg) {
+        clonedMainImg.src = dataMainImg;
+      }
+      const clonedBlurImg = clone.querySelector('.blur-xl') as HTMLImageElement | null;
+      if (clonedBlurImg && dataMainImg) {
+        clonedBlurImg.src = dataMainImg;
+      }
+      const clonedLogo = clone.querySelector('#card-logo') as HTMLImageElement | null;
+      if (clonedLogo && dataLogo) {
+        clonedLogo.src = dataLogo;
+      }
+      const clonedAuthorImg =
+        (clone.querySelector('#out-author-img') as HTMLImageElement | null) ||
+        (clone.querySelector('img[alt="' + (cardData.authorName || 'লেখক') + '"]') as HTMLImageElement | null);
+      if (clonedAuthorImg && dataAuthorImg) {
+        clonedAuthorImg.src = dataAuthorImg;
+      }
+
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      // 5. Explicitly await decode/load of every image in the clone
+      const cloneImages = Array.from(clone.querySelectorAll('img'));
+      await Promise.all(
+        cloneImages.map((img) => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+            setTimeout(resolve, 800);
+          });
+        })
+      );
+
+      // Brief tick for font and CSS paint stabilization
+      await new Promise((r) => setTimeout(r, 60));
+
+      // 6. Capture the clone at exact scale (2x for 1080x1080 / 1080x1350)
+      const canvas = await html2canvas(clone, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: null,
         width: targetWidth,
         height: targetHeight,
-        windowWidth: 1200,
-        windowHeight: 1000,
+        x: 0,
+        y: 0,
         scrollX: 0,
         scrollY: 0,
-        onclone: (clonedDoc, clonedElement) => {
-          if (clonedDoc.body) {
-            clonedDoc.body.style.width = '1200px';
-            clonedDoc.body.style.minWidth = '1200px';
-            clonedDoc.body.style.overflow = 'visible';
-          }
-          if (clonedDoc.documentElement) {
-            clonedDoc.documentElement.style.width = '1200px';
-            clonedDoc.documentElement.style.minWidth = '1200px';
-            clonedDoc.documentElement.style.overflow = 'visible';
-          }
-
-          if (clonedElement) {
-            clonedElement.style.transform = 'none';
-            clonedElement.style.margin = '0';
-            clonedElement.style.position = 'relative';
-            clonedElement.style.left = '0';
-            clonedElement.style.top = '0';
-            clonedElement.style.width = `${targetWidth}px`;
-            clonedElement.style.height = `${targetHeight}px`;
-          }
-
-          const clonedMainImg = clonedDoc.getElementById('fg-main') as HTMLImageElement | null;
-          if (clonedMainImg && dataMainImg) {
-            clonedMainImg.src = dataMainImg;
-          }
-          const clonedLogo = clonedDoc.getElementById('card-logo') as HTMLImageElement | null;
-          if (clonedLogo && dataLogo) {
-            clonedLogo.src = dataLogo;
-          }
-          const clonedAuthorImg =
-            (clonedDoc.getElementById('out-author-img') as HTMLImageElement | null) ||
-            (clonedDoc.querySelector('img[alt="' + (cardData.authorName || 'লেখক') + '"]') as HTMLImageElement | null);
-          if (clonedAuthorImg && dataAuthorImg) {
-            clonedAuthorImg.src = dataAuthorImg;
-          }
-
-          // Force flex centering in html2canvas clone
-          const clonedTag = clonedDoc.getElementById('out-tag');
-          if (clonedTag) {
-            clonedTag.style.display = 'inline-flex';
-            clonedTag.style.alignItems = 'center';
-            clonedTag.style.justifyContent = 'center';
-            clonedTag.style.height = '30px';
-            clonedTag.style.lineHeight = '1.2';
-            clonedTag.style.padding = '0 16px';
-            const tagSpan = clonedTag.querySelector('span');
-            if (tagSpan) {
-              tagSpan.style.display = 'inline-flex';
-              tagSpan.style.alignItems = 'center';
-              tagSpan.style.justifyContent = 'center';
-              tagSpan.style.lineHeight = '1.2';
-              tagSpan.style.height = 'auto';
-              tagSpan.style.transform = 'none';
-            }
-          }
-
-          const clonedFooter = clonedDoc.getElementById('card-footer-bar');
-          if (clonedFooter) {
-            clonedFooter.style.display = 'flex';
-            clonedFooter.style.alignItems = 'center';
-            clonedFooter.style.justifyContent = 'space-around';
-            clonedFooter.style.height = '45px';
-            clonedFooter.style.lineHeight = '1.2';
-            const items = clonedFooter.querySelectorAll('.footer-social-item');
-            items.forEach((item) => {
-              if (item instanceof HTMLElement) {
-                item.style.display = 'flex';
-                item.style.alignItems = 'center';
-                item.style.justifyContent = 'center';
-                item.style.height = '100%';
-                item.style.lineHeight = '1.2';
-                const icon = item.querySelector('i');
-                if (icon) {
-                  icon.style.display = 'inline-flex';
-                  icon.style.alignItems = 'center';
-                  icon.style.justifyContent = 'center';
-                  icon.style.lineHeight = '1';
-                  icon.style.height = 'auto';
-                }
-                const span = item.querySelector('span');
-                if (span) {
-                  span.style.display = 'inline-flex';
-                  span.style.alignItems = 'center';
-                  span.style.lineHeight = '1.2';
-                  span.style.height = 'auto';
-                  span.style.transform = 'none';
-                }
-              }
-            });
-          }
-        },
       });
 
       const image = canvas.toDataURL('image/png', 1.0);
@@ -315,6 +283,9 @@ export default function App() {
       console.error('Download error:', err);
       showToast('ডাউনলোডে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।');
     } finally {
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
       setIsDownloading(false);
     }
   };

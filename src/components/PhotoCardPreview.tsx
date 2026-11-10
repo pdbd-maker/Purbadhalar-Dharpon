@@ -68,11 +68,21 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               }}
             />
 
+            {/* Opaque Base for Left Half to prevent any image bleed */}
+            <div
+              className="absolute inset-y-0 left-0 pointer-events-none z-0"
+              style={{
+                width: `${cardWidth * 0.58}px`,
+                backgroundColor: '#edf2f7',
+              }}
+            />
+
             {/* RIGHT SIDE: Main Topic Image inside the Angled Rounded Mask */}
             <div
               className="absolute inset-0 w-full h-full overflow-hidden z-0"
               style={{
-                clipPath: 'url(#editorial-split-clip)',
+                clipPath: `polygon(${cardWidth * 0.58}px 0px, 100% 0px, 100% 100%, ${cardWidth * 0.52}px 100%, ${cardWidth * 0.43}px ${cardHeight * 0.53}px, ${cardWidth * 0.40}px ${cardHeight * 0.50}px, ${cardWidth * 0.43}px ${cardHeight * 0.47}px)`,
+                WebkitClipPath: `polygon(${cardWidth * 0.58}px 0px, 100% 0px, 100% 100%, ${cardWidth * 0.52}px 100%, ${cardWidth * 0.43}px ${cardHeight * 0.53}px, ${cardWidth * 0.40}px ${cardHeight * 0.50}px, ${cardWidth * 0.43}px ${cardHeight * 0.47}px)`,
               }}
             >
               {data.mainImgUrl ? (
