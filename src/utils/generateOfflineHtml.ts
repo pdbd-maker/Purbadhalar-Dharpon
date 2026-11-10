@@ -247,8 +247,10 @@ export function generateOfflineHtml(
             pointer-events: none;
         }
         .main-img { 
-            width: 100%; 
-            height: 100%; 
+            max-width: 100%; 
+            max-height: 100%; 
+            width: auto; 
+            height: auto; 
             object-fit: contain; 
             position: relative; 
             transform-origin: center center; 
@@ -445,11 +447,9 @@ export function generateOfflineHtml(
                     <input type="file" id="input-card-img" accept="image/*">
                 </div>
                 <div class="input-group">
-                    <label>ছবি ডিসপ্লে মোড (ক্রপ রোধ):</label>
+                    <label>ছবি ডিসপ্লে মোড:</label>
                     <select id="card-img-fit">
                         <option value="contain" selected>🖼️ পুরো ছবি (অটো ক্রপ ছাড়া)</option>
-                        <option value="cover">✂️ ক্যানভাস জুম (Cover)</option>
-                        <option value="fill">📐 টেনে ফিট (Fill)</option>
                     </select>
                 </div>
             </div>

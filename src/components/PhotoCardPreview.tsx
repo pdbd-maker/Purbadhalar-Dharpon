@@ -354,13 +354,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
                   src={data.mainImgUrl}
                   alt="Main News"
                   crossOrigin="anonymous"
-                  className={`w-full h-full relative transition-transform duration-75 ease-out ${
-                    (data.imgFit || 'contain') === 'contain'
-                      ? 'object-contain'
-                      : (data.imgFit || 'contain') === 'fill'
-                      ? 'object-fill'
-                      : 'object-cover'
-                  }`}
+                  className="max-w-full max-h-full w-auto h-auto object-contain relative transition-transform duration-75 ease-out select-none"
                   onError={(e) => {
                     e.currentTarget.src =
                       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="540" cy="540" r="300" fill="%231e293b" opacity="0.6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="32" font-family="sans-serif">পূর্বধলার দর্পণ - ছবি নির্বাচন করুন</text></svg>';
@@ -381,37 +375,43 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
 
           {/* Fixed Top Header Bar */}
           <div
-            className="absolute top-0 left-0 w-full z-10 transition-colors duration-300"
+            className="absolute top-0 left-0 w-full transition-colors duration-300 pointer-events-none"
             style={{
               height: '85px',
               background: theme.topBarGradient,
               borderBottom: `3.5px solid ${theme.topBarBorder}`,
+              zIndex: 15,
             }}
           />
 
           {/* Bottom Dark Gradient Mask for Text Readability */}
           <div
-            className="absolute bottom-[45px] left-0 w-full z-10 pointer-events-none transition-all duration-300"
+            className="absolute bottom-[45px] left-0 w-full pointer-events-none transition-all duration-300"
             style={{
               height: isPortrait ? '260px' : '200px',
               background: `linear-gradient(0deg, rgba(0,0,0,${data.overlayOpacity}) 0%, rgba(0,0,0,${
                 data.overlayOpacity * 0.7
               }) 60%, transparent 100%)`,
+              zIndex: 15,
             }}
           />
 
           {/* Newsprint Subtle Texture Dot Overlay */}
           <div
-            className="absolute bottom-0 left-0 w-full z-[11] opacity-[0.03] pointer-events-none"
+            className="absolute bottom-0 left-0 w-full opacity-[0.03] pointer-events-none"
             style={{
               height: '40%',
               backgroundImage: 'radial-gradient(circle, #fff 10%, transparent 11%)',
               backgroundSize: '5px 5px',
+              zIndex: 16,
             }}
           />
 
           {/* Top Header Content Box */}
-          <div className="absolute top-[15px] left-[22px] right-[22px] flex items-center justify-between z-20">
+          <div
+            className="absolute top-[15px] left-[22px] right-[22px] flex items-center justify-between pointer-events-auto"
+            style={{ zIndex: 25 }}
+          >
             {/* Logo Section */}
             <div className="flex items-center gap-3">
               {data.logoUrl ? (
@@ -465,9 +465,10 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
 
           {/* Content Area (Headline / Opinion Column + Detail Tag + Reporter) */}
           <div
-            className="absolute left-[22px] right-[22px] z-20 text-left transition-all duration-200 flex flex-col items-start gap-2.5"
+            className="absolute left-[22px] right-[22px] text-left transition-all duration-200 flex flex-col items-start gap-2.5"
             style={{
               bottom: '58px',
+              zIndex: 25,
             }}
           >
             {data.cardType === 'opinion' ? (
@@ -642,7 +643,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
           {/* Footer Social Bar */}
           <div
             id="card-footer-bar"
-            className="absolute bottom-0 left-0 w-full h-[45px] z-30 flex items-center justify-around px-4 transition-colors duration-300"
+            className="absolute bottom-0 left-0 w-full h-[45px] flex items-center justify-around px-4 transition-colors duration-300"
             style={{
               backgroundColor: theme.footerBg,
               color: theme.footerTextColor,
@@ -652,6 +653,7 @@ export const PhotoCardPreview = forwardRef<HTMLDivElement, PhotoCardPreviewProps
               alignItems: 'center',
               justifyContent: 'space-around',
               boxSizing: 'border-box',
+              zIndex: 30,
             }}
           >
             <div
